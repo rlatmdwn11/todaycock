@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1f7a4d" />
+  <title>오늘콕 - 배드민턴 복식 대진표</title>
+  <link rel="manifest" href="manifest.json" />
+
+  <meta name="application-name" content="오늘콕" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="오늘콕" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+  <style>
+    :root{
+      --green:#1f7a4d; --green2:#54aa73; --cream:#fff9e9; --ink:#24332b;
+      --line:#dce7df; --card:rgba(255,255,255,.94); --danger:#c84444;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR",sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(255,255,255,.75), transparent 28%),
+        linear-gradient(145deg,#dff4df,#fff4c8 58%,#d8f0da);
+      min-height:100vh;
+    }
+    body:before{
+      content:""; position:fixed; inset:0; pointer-events:none; opacity:.11;
+      background-image:
+        linear-gradient(30deg, transparent 45%, #2b7d4f 46%, #2b7d4f 48%, transparent 49%),
+        linear-gradient(-30deg, transparent 45%, #2b7d4f 46%, #2b7d4f 48%, transparent 49%);
+      background-size:72px 72px;
+    }
+    header{padding:28px 18px 12px;text-align:center;position:relative}
+    .logo{font-size:34px;font-weight:900;letter-spacing:-2px;color:var(--green)}
+    .logo span{display:inline-block;transform:rotate(-8deg);margin-left:4px}
+    .tag{margin-top:4px;font-size:14px;color:#567064}
+    main{max-width:1080px;margin:auto;padding:12px 14px 80px;position:relative}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .card{background:var(--card);border:1px solid rgba(255,255,255,.8);border-radius:20px;padding:18px;box-shadow:0 12px 28px rgba(38,80,54,.11);backdrop-filter:blur(5px)}
+    .card h2{margin:0 0 14px;font-size:20px}
+    .full{grid-column:1/-1}
+    label{display:block;font-weight:700;font-size:13px;margin:10px 0 6px}
+    input,select,button,textarea{font:inherit}
+    input,select{
+      width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:white;color:var(--ink)
+    }
+    .row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+    .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    button{border:0;border-radius:12px;padding:12px 15px;font-weight:800;cursor:pointer}
+    .primary{background:var(--green);color:white}
+    .secondary{background:#e8f4ec;color:var(--green)}
+    .ghost{background:white;border:1px solid var(--line);color:var(--ink)}
+    .danger{background:#fff0f0;color:var(--danger)}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .player-form{display:grid;grid-template-columns:1.4fr .65fr .65fr .75fr auto;gap:8px;align-items:end}
+    .player-list{display:grid;gap:8px;margin-top:14px}
+    .player{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:10px 12px;background:#f7fbf8;border:1px solid var(--line);border-radius:12px}
+    .badge{font-size:12px;font-weight:800;padding:4px 8px;border-radius:999px;background:#e4f3e8;color:var(--green)}
+    .muted{color:#75847c;font-size:13px}
+    .summary{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+    .summary span{background:#f0f7f2;border:1px solid var(--line);padding:7px 10px;border-radius:999px;font-size:13px}
+    .round{margin:16px 0 24px}
+    .round h3{margin:0 0 9px;color:var(--green)}
+    .match-table{width:100%;border-collapse:separate;border-spacing:0 7px}
+    .match-table th{font-size:12px;color:#6c7d73;text-align:left;padding:0 9px}
+    .match-table td{background:white;padding:10px 9px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .match-table td:first-child{border-left:1px solid var(--line);border-radius:11px 0 0 11px}
+    .match-table td:last-child{border-right:1px solid var(--line);border-radius:0 11px 11px 0}
+    .score{width:58px;padding:7px;text-align:center}
+    .empty{padding:34px 12px;text-align:center;color:#819087;border:2px dashed var(--line);border-radius:16px}
+    .notice{font-size:12px;color:#6d7b73;line-height:1.5}
+    .tabs{display:flex;gap:8px;margin-bottom:12px}
+    .tab{flex:1;background:#edf5ef;color:#5b6c62}
+    .tab.active{background:var(--green);color:white}
+    .hidden{display:none!important}
+
+
+
+
+    .install-banner{
+      max-width:1080px;margin:0 auto 8px;padding:0 14px;display:none;
+    }
+    .install-box{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      background:#ffffffee;border:1px solid var(--line);border-radius:14px;
+      padding:10px 12px;box-shadow:0 6px 16px rgba(38,80,54,.08);
+    }
+    .install-box span{font-size:13px}
+    .install-btn{background:var(--green);color:white;padding:9px 12px;font-size:13px}
+
+    .creator-credit{
+      text-align:center;
+      margin:28px 0 6px;
+      font-size:11px;
+      color:#87938c;
+      letter-spacing:.2px;
+    }
+    @media print{
+      .creator-credit{
+        display:block!important;
+        margin-top:18px;
+        font-size:9px;
+        color:#777;
+      }
+    }
+
+    .overview-wrap{overflow-x:auto;margin-top:12px}
+    .overview-table{width:100%;border-collapse:collapse;min-width:760px;background:white}
+    .overview-table th,.overview-table td{border:1px solid var(--line);padding:10px;text-align:center;vertical-align:middle}
+    .overview-table th{background:#edf6ef;color:var(--green);font-size:13px}
+    .overview-table td{font-size:13px}
+    .overview-table .round-cell{font-weight:900;background:#f7fbf8;color:var(--green)}
+    .overview-table .court-cell{font-weight:800;white-space:nowrap}
+    .overview-table .team1-cell{background:#f4faf6}
+    .overview-table .team2-cell{background:#fffaf0}
+    .overview-score{font-weight:900;font-size:15px;white-space:nowrap}
+    .overview-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+    .overview-summary{display:flex;gap:8px;flex-wrap:wrap}
+    .overview-summary span{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#f7fbf8;font-size:13px}
+
+    .team-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+    .team-stat-box{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fbfdfb}
+    .team-stat-box h3{margin:0 0 10px;color:var(--green)}
+    .team-scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;text-align:center;margin:10px 0 18px}
+    .team-scoreboard .team-total{padding:14px;border:1px solid var(--line);border-radius:14px;background:#f7fbf8}
+    .team-scoreboard strong{display:block;font-size:28px;color:var(--green)}
+    .edit-select{min-width:110px;padding:7px 8px;font-size:13px}
+    .edit-actions{display:flex;gap:5px;flex-wrap:wrap}
+    .small-btn{padding:7px 9px;font-size:12px;border-radius:9px}
+    @media(max-width:760px){.team-stats-grid{grid-template-columns:1fr}.team-scoreboard{grid-template-columns:1fr}.edit-select{min-width:90px}}
+
+    @media(max-width:760px){
+      .grid{grid-template-columns:1fr}
+      .full{grid-column:auto}
+      .player-form{grid-template-columns:1fr 1fr}
+      .player-form .name-wrap{grid-column:1/-1}
+      .player-form button{grid-column:1/-1}
+      .row3{grid-template-columns:1fr 1fr}
+      .match-table{font-size:12px}
+      .match-table th:nth-child(5),.match-table td:nth-child(5){display:none}
+    }
+    @media print{
+      body{background:white}
+      header,.no-print,#setupCard,#playersCard{display:none!important}
+      main{max-width:none;padding:0}
+      .card{box-shadow:none;border:0;padding:0}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">오늘콕 <span>🏸</span></div>
+  <div class="tag">우리 모임 전용 복식 대진표</div>
+</header>
+
+<div class="install-banner no-print" id="installBanner">
+  <div class="install-box">
+    <span>🏸 오늘콕을 홈 화면에 설치하면 앱처럼 사용할 수 있어요.</span>
+    <button class="install-btn" id="installBtn">앱 설치</button>
+  </div>
+</div>
+
+
+<main>
+  <div class="grid">
+    <section class="card" id="setupCard">
+      <h2>경기 설정</h2>
+      <div class="row">
+        <div><label>경기 종류</label><select id="matchType"><option>여복</option><option>남복</option><option>혼복</option></select></div>
+        <div><label>대진 방식</label><select id="method">
+          <option value="interteam" selected>팀1 vs 팀2 교류전</option>
+          <option value="balanced">모임 내 균형 순환</option>
+          <option value="random">완전 랜덤 대진</option>
+          <option value="fixed">고정 파트너 팀전</option>
+        </select></div>
+      </div>
+      <div class="row3">
+        <div><label>라운드 수</label><input id="rounds" type="number" min="1" max="30" value="5"></div>
+        <div><label>코트 수</label><input id="courts" type="number" min="1" max="20" value="6"></div>
+        <div><label>목표 경기 수</label><input id="targetGames" type="number" min="1" max="200" value="15"></div>
+      </div>
+      <div class="row">
+        <div><label>급수 섞기</label><select id="gradeRule"><option value="balance">급수 균형 우선</option><option value="random">급수 무관</option></select></div>
+        <div><label>같은 파트너 반복</label><select id="repeatRule"><option value="avoid">최대한 피하기</option><option value="allow">허용</option></select></div>
+      </div>
+      <div class="actions">
+        <button class="primary" onclick="generateSchedule()">대진표 만들기</button>
+        <button class="secondary" onclick="saveSettings()">설정 저장</button>
+        <button class="ghost" onclick="resetAll()">전체 초기화</button>
+      </div>
+      <p class="notice">※ 이름과 설정은 서버로 전송되지 않고 현재 휴대폰·컴퓨터의 브라우저에만 저장됩니다.</p>
+    </section>
+
+    <section class="card" id="playersCard">
+      <h2>선수 명단</h2>
+      <div class="player-form">
+        <div class="name-wrap"><label>이름</label><input id="playerName" placeholder="선수 이름"></div>
+        <div><label>성별</label><select id="gender"><option value="여">여</option><option value="남">남</option></select></div>
+        <div><label>급수</label><select id="grade"><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+        <div><label>소속 팀</label><select id="team"><option value="팀1">팀1</option><option value="팀2">팀2</option></select></div>
+        <button class="primary" onclick="addPlayer()">추가</button>
+      </div>
+      <div class="actions">
+        <button class="secondary" onclick="addSample()">가상 명단 넣기</button>
+        <button class="ghost" onclick="exportRoster()">명단 내보내기</button>
+        <label class="ghost" style="padding:10px 14px;cursor:pointer">명단 불러오기<input type="file" accept=".json" onchange="importRoster(event)" style="display:none"></label>
+      </div>
+      <div class="summary" id="playerSummary"></div>
+      <div class="player-list" id="playerList"></div>
+    </section>
+
+    <section class="card full" id="resultCard">
+      <div class="tabs no-print">
+        <button class="tab active" data-tab="schedule" onclick="showTab('schedule')">대진표</button>
+        <button class="tab" data-tab="overview" onclick="showTab('overview')">한눈에 보기</button>
+        <button class="tab" data-tab="stats" onclick="showTab('stats')">참가 통계</button>
+      </div>
+      <div id="scheduleTab">
+        <div class="actions no-print" style="justify-content:flex-end;margin-top:0">
+          <button class="ghost" onclick="window.print()">인쇄 / PDF</button>
+          <button class="secondary" onclick="exportCSV()">엑셀용 CSV</button>
+        </div>
+        <div id="scheduleArea" class="empty">선수 명단을 입력한 뒤 ‘대진표 만들기’를 눌러주세요.</div>
+      </div>
+      <div id="overviewTab" class="hidden">
+        <div class="actions no-print" style="justify-content:flex-end;margin-top:0">
+          <button class="ghost" onclick="printOverview()">한눈에 보기 인쇄 / PDF</button>
+          <button class="secondary" onclick="exportOverviewCSV()">한눈에 보기 CSV</button>
+        </div>
+        <div id="overviewArea" class="empty">대진표를 만들면 전체 경기가 한 장의 표로 표시됩니다.</div>
+      </div>
+      <div id="statsTab" class="hidden"><div id="statsArea" class="empty">대진표를 만들면 선수별 경기 수가 표시됩니다.</div></div>
+    </section>
+  </div>
+  <div class="creator-credit">Made by 김승주 · 안산시</div>
+</main>
+
+<script>
+const GRADE_SCORE={S:5,A:4,B:3,C:2,D:1};
+let players=JSON.parse(localStorage.getItem('todaycock_players')||'[]').map((p,i)=>({...p,team:p.team||((i%2)?'팀2':'팀1')}));
+let schedule=JSON.parse(localStorage.getItem('todaycock_schedule')||'[]');
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function savePlayers(){localStorage.setItem('todaycock_players',JSON.stringify(players));renderPlayers()}
+function addPlayer(){
+  const name=document.getElementById('playerName').value.trim();
+  if(!name)return alert('선수 이름을 입력해주세요.');
+  players.push({id:uid(),name,gender:gender.value,grade:grade.value,team:team.value});
+  playerName.value=''; savePlayers(); playerName.focus();
+}
+function removePlayer(id){players=players.filter(p=>p.id!==id);savePlayers()}
+function renderPlayers(){
+  const box=document.getElementById('playerList');
+  playerSummary.innerHTML=`<span>전체 ${players.length}명</span><span>팀1 ${players.filter(p=>p.team==='팀1').length}명</span><span>팀2 ${players.filter(p=>p.team==='팀2').length}명</span><span>여 ${players.filter(p=>p.gender==='여').length}명</span><span>남 ${players.filter(p=>p.gender==='남').length}명</span>`;
+  if(!players.length){box.innerHTML='<div class="empty">아직 등록된 선수가 없습니다.</div>';return}
+  box.innerHTML=players.map((p,i)=>`<div class="player"><b>${i+1}. ${esc(p.name)}</b><span class="badge">${p.team}</span><span class="badge">${p.gender}</span><span class="badge">${p.grade}급</span><button class="danger" onclick="removePlayer('${p.id}')">삭제</button></div>`).join('');
+}
+function addSample(){
+  if(players.length && !confirm('현재 명단 뒤에 가상 명단을 추가할까요?'))return;
+  const women=['가영','나연','다은','라희','미진','보라','서윤','아라','유진','지우','채원','하린','예나','소민','수아'];
+  const men=['건우','도윤','민준','서준','시우','우진','지훈','태민','현우','준호','성민','재윤','정우','민재','승현'];
+  const source=matchType.value==='남복'?men:matchType.value==='혼복'?[...women.slice(0,8),...men.slice(0,8)]:women;
+  source.forEach((name,i)=>players.push({id:uid(),name,gender:(men.includes(name)?'남':'여'),grade:['S','A','B','C','D'][i%5],team:i<Math.ceil(source.length/2)?'팀1':'팀2'}));
+  savePlayers();
+}
+function settings(){
+  return {matchType:matchType.value,method:method.value,rounds:+rounds.value,courts:+courts.value,targetGames:+targetGames.value,gradeRule:gradeRule.value,repeatRule:repeatRule.value}
+}
+function saveSettings(){localStorage.setItem('todaycock_settings',JSON.stringify(settings()));alert('설정을 이 기기에 저장했어요.')}
+function loadSettings(){
+  const s=JSON.parse(localStorage.getItem('todaycock_settings')||'null'); if(!s)return;
+  Object.entries(s).forEach(([k,v])=>{const el=document.getElementById(k);if(el)el.value=v});
+}
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function eligible(){
+  const t=matchType.value;
+  if(t==='여복')return players.filter(p=>p.gender==='여');
+  if(t==='남복')return players.filter(p=>p.gender==='남');
+  return players;
+}
+function pairKey(a,b){return [a.id,b.id].sort().join('|')}
+function opponentKey(team1,team2){return [...team1,...team2].map(p=>p.id).sort().join('|')}
+function validMixed(team){return team.length===2 && team.some(p=>p.gender==='여') && team.some(p=>p.gender==='남')}
+function teamScore(team){return team.reduce((s,p)=>s+(GRADE_SCORE[p.grade]||0),0)}
+function byTeam(name){return eligible().filter(p=>p.team===name)}
+
+function chooseFour(pool, counts, usedThisRound){
+  return [...pool].filter(p=>!usedThisRound.has(p.id)).sort((a,b)=>(counts[a.id]||0)-(counts[b.id]||0)+Math.random()-.5).slice(0,4);
+}
+function bestSplit(four, partnerUse, opponentUse, opts){
+  const splits=[
+    [[four[0],four[1]],[four[2],four[3]]],
+    [[four[0],four[2]],[four[1],four[3]]],
+    [[four[0],four[3]],[four[1],four[2]]]
+  ];
+  const mixed=opts.matchType==='혼복';
+  const valid=splits.filter(s=>!mixed||(validMixed(s[0])&&validMixed(s[1])));
+  const candidates=valid.length?valid:splits;
+  return candidates.sort((x,y)=>scoreSplit(x)-scoreSplit(y))[0];
+  function scoreSplit(s){
+    let score=0;
+    if(opts.repeatRule==='avoid')score+=(partnerUse[pairKey(...s[0])]||0)*9+(partnerUse[pairKey(...s[1])]||0)*9;
+    score+=(opponentUse[opponentKey(s[0],s[1])]||0)*4;
+    if(opts.gradeRule==='balance')score+=Math.abs(teamScore(s[0])-teamScore(s[1]))*3;
+    return score+Math.random();
+  }
+}
+
+function generateInterteam(opts){
+  const t1=byTeam('팀1'), t2=byTeam('팀2'), counts={}, partnerUse={};
+  [...t1,...t2].forEach(p=>counts[p.id]=0);
+  const result=[]; let made=0;
+  function choosePair(pool, used, mixed){
+    const avail=pool.filter(p=>!used.has(p.id)).sort((a,b)=>(counts[a.id]||0)-(counts[b.id]||0)+Math.random()-.5);
+    const pairs=[];
+    for(let i=0;i<avail.length;i++)for(let j=i+1;j<avail.length;j++){
+      const pair=[avail[i],avail[j]];
+      if(mixed && !validMixed(pair))continue;
+      let score=(partnerUse[pairKey(...pair)]||0)*(opts.repeatRule==='avoid'?10:1);
+      score+=opts.gradeRule==='balance'?Math.abs(teamScore(pair)-5)*.15:0;
+      score+=(counts[pair[0].id]+counts[pair[1].id])*2+Math.random();
+      pairs.push({pair,score});
+    }
+    return pairs.sort((a,b)=>a.score-b.score)[0]?.pair||null;
+  }
+  for(let r=1;r<=opts.rounds&&made<opts.targetGames;r++){
+    const used1=new Set(),used2=new Set(),matches=[];
+    for(let c=1;c<=opts.courts&&made<opts.targetGames;c++){
+      const a=choosePair(t1,used1,opts.matchType==='혼복');
+      const b=choosePair(t2,used2,opts.matchType==='혼복');
+      if(!a||!b)break;
+      a.forEach(p=>{used1.add(p.id);counts[p.id]++}); b.forEach(p=>{used2.add(p.id);counts[p.id]++});
+      partnerUse[pairKey(...a)]=(partnerUse[pairKey(...a)]||0)+1;
+      partnerUse[pairKey(...b)]=(partnerUse[pairKey(...b)]||0)+1;
+      let team1=a,team2=b;
+      if(opts.gradeRule==='balance' && Math.abs(teamScore(a)-teamScore(b))>2){
+        // 다음 선택에서 출전횟수와 급수 균형 점수가 자연스럽게 보정되도록 유지
+      }
+      matches.push({court:c,team1,team2,score1:'',score2:''}); made++;
+    }
+    if(matches.length)result.push({round:r,matches});
+  }
+  return result;
+}
+
+function generateBalanced(opts){
+  const pool=eligible(), counts={}, partnerUse={}, opponentUse={}, result=[];
+  pool.forEach(p=>counts[p.id]=0);
+  let made=0;
+  for(let r=1;r<=opts.rounds && made<opts.targetGames;r++){
+    const used=new Set(), matches=[];
+    for(let c=1;c<=opts.courts && made<opts.targetGames;c++){
+      let four=chooseFour(pool,counts,used);
+      if(opts.matchType==='혼복'){
+        const avail=pool.filter(p=>!used.has(p.id)).sort((a,b)=>(counts[a.id]||0)-(counts[b.id]||0)+Math.random()-.5);
+        const ws=avail.filter(p=>p.gender==='여').slice(0,2), ms=avail.filter(p=>p.gender==='남').slice(0,2);
+        if(ws.length>=2&&ms.length>=2)four=[...ws,...ms];
+      }
+      if(four.length<4)break;
+      const teams=bestSplit(four,partnerUse,opponentUse,opts);
+      teams.flat().forEach(p=>{used.add(p.id);counts[p.id]++});
+      partnerUse[pairKey(...teams[0])]=(partnerUse[pairKey(...teams[0])]||0)+1;
+      partnerUse[pairKey(...teams[1])]=(partnerUse[pairKey(...teams[1])]||0)+1;
+      opponentUse[opponentKey(...teams)]=(opponentUse[opponentKey(...teams)]||0)+1;
+      matches.push({court:c,team1:teams[0],team2:teams[1],score1:'',score2:''});made++;
+    }
+    if(matches.length)result.push({round:r,matches});
+  }
+  return result;
+}
+function generateRandom(opts){
+  const pool=eligible(), result=[];let made=0;
+  for(let r=1;r<=opts.rounds&&made<opts.targetGames;r++){
+    let avail=shuffle(pool),matches=[];
+    for(let c=1;c<=opts.courts&&avail.length>=4&&made<opts.targetGames;c++){
+      let four;
+      if(opts.matchType==='혼복'){
+        const ws=avail.filter(p=>p.gender==='여').slice(0,2),ms=avail.filter(p=>p.gender==='남').slice(0,2);
+        if(ws.length<2||ms.length<2)break;four=[...ws,...ms];const ids=new Set(four.map(p=>p.id));avail=avail.filter(p=>!ids.has(p.id));
+      }else four=avail.splice(0,4);
+      const teams=bestSplit(four,{}, {}, {...opts,repeatRule:'allow',gradeRule:'random'});
+      matches.push({court:c,team1:teams[0],team2:teams[1],score1:'',score2:''});made++;
+    }
+    if(matches.length)result.push({round:r,matches});
+  } return result;
+}
+function generateFixed(opts){
+  let pool=eligible(), teams=[];
+  if(opts.matchType==='혼복'){
+    let ws=shuffle(pool.filter(p=>p.gender==='여')),ms=shuffle(pool.filter(p=>p.gender==='남'));
+    while(ws.length&&ms.length)teams.push([ws.shift(),ms.shift()]);
+  }else{
+    pool=shuffle(pool);while(pool.length>=2)teams.push([pool.shift(),pool.shift()]);
+  }
+  const result=[];let made=0, rotation=1;
+  while(made<opts.targetGames&&rotation<=opts.rounds){
+    const order=shuffle(teams),matches=[];
+    for(let c=1;c<=opts.courts&&order.length>=2&&made<opts.targetGames;c++){
+      matches.push({court:c,team1:order.shift(),team2:order.shift(),score1:'',score2:''});made++;
+    }
+    if(matches.length)result.push({round:rotation,matches});rotation++;
+  } return result;
+}
+function generateSchedule(){
+  const opts=settings(), pool=eligible();
+  if(pool.length<4)return alert('선택한 경기 종류에 맞는 선수가 최소 4명 필요합니다.');
+  if(opts.method==='interteam'&&(byTeam('팀1').length<2||byTeam('팀2').length<2))return alert('교류전은 팀1과 팀2에 각각 최소 2명이 필요합니다.');
+  if(opts.matchType==='혼복'&&(pool.filter(p=>p.gender==='여').length<2||pool.filter(p=>p.gender==='남').length<2))return alert('혼복은 여성 2명, 남성 2명 이상이 필요합니다.');
+  if(opts.method==='interteam'&&opts.matchType==='혼복'&&['팀1','팀2'].some(t=>byTeam(t).filter(p=>p.gender==='여').length<1||byTeam(t).filter(p=>p.gender==='남').length<1))return alert('혼복 교류전은 각 팀에 여성과 남성이 모두 필요합니다.');
+  schedule=opts.method==='interteam'?generateInterteam(opts):opts.method==='random'?generateRandom(opts):opts.method==='fixed'?generateFixed(opts):generateBalanced(opts);
+  if(!schedule.length)return alert('현재 조건으로 대진을 만들 수 없습니다. 인원이나 설정을 확인해주세요.');
+  localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));renderSchedule();showTab('schedule');
+}
+
+function playerOptions(selectedId, requiredTeam){
+  return players
+    .filter(p=>!requiredTeam || (p.team||'팀1')===requiredTeam)
+    .map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${esc(p.name)} (${p.grade}·${p.team||'팀1'})</option>`)
+    .join('');
+}
+function changeMatchPlayer(ri,mi,side,pos,playerId){
+  const p=players.find(x=>x.id===playerId); if(!p)return;
+  const match=schedule[ri].matches[mi];
+  const arr=side===1?match.team1:match.team2;
+  const all=[...match.team1,...match.team2];
+  if(all.some((x,idx)=>x.id===playerId && !(x.id===arr[pos].id))) {
+    alert('같은 경기에 같은 선수를 두 번 넣을 수 없습니다.');
+    renderSchedule(); return;
+  }
+  arr[pos]=p;
+  localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));
+  renderSchedule();
+}
+function changeCourt(ri,mi,value){
+  schedule[ri].matches[mi].court=Math.max(1,Number(value)||1);
+  localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));
+}
+function deleteMatch(ri,mi){
+  if(!confirm('이 경기를 대진표에서 삭제할까요?'))return;
+  schedule[ri].matches.splice(mi,1);
+  if(schedule[ri].matches.length===0)schedule.splice(ri,1);
+  localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));
+  renderSchedule();
+}
+function addBlankMatch(ri){
+  const team1Players=players.filter(p=>(p.team||'팀1')==='팀1');
+  const team2Players=players.filter(p=>p.team==='팀2');
+  if(team1Players.length<2||team2Players.length<2)return alert('팀1과 팀2에 각각 선수가 2명 이상 있어야 합니다.');
+  const maxCourt=Math.max(0,...schedule[ri].matches.map(m=>Number(m.court)||0));
+  schedule[ri].matches.push({court:maxCourt+1,team1:team1Players.slice(0,2),team2:team2Players.slice(0,2),score1:'',score2:''});
+  localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));
+  renderSchedule();
+}
+
+
+function renderOverview(){
+  if(!schedule.length){
+    overviewArea.className='empty';
+    overviewArea.innerHTML='대진표를 만들면 전체 경기가 한 장의 표로 표시됩니다.';
+    return;
+  }
+  const totalMatches=schedule.reduce((sum,r)=>sum+r.matches.length,0);
+  const maxCourt=Math.max(0,...schedule.flatMap(r=>r.matches.map(m=>Number(m.court)||0)));
+  const scored=schedule.reduce((sum,r)=>sum+r.matches.filter(m=>m.score1!==''&&m.score2!=='').length,0);
+  const rows=schedule.flatMap(r=>r.matches.map((m,idx)=>({
+    round:r.round,
+    showRound:idx===0,
+    roundSpan:r.matches.length,
+    court:m.court,
+    team1:`${m.team1[0].name} · ${m.team1[1].name}`,
+    team2:`${m.team2[0].name} · ${m.team2[1].name}`,
+    score:(m.score1!==''&&m.score2!=='')?`${m.score1} : ${m.score2}`:'-'
+  })));
+  overviewArea.className='';
+  overviewArea.innerHTML=`
+    <div class="overview-head">
+      <div class="overview-summary">
+        <span>총 ${schedule.length}라운드</span>
+        <span>총 ${totalMatches}경기</span>
+        <span>최대 ${maxCourt}코트</span>
+        <span>결과 입력 ${scored}/${totalMatches}</span>
+      </div>
+    </div>
+    <div class="overview-wrap">
+      <table class="overview-table">
+        <thead><tr><th>라운드</th><th>코트</th><th>팀1 선수</th><th>점수</th><th>팀2 선수</th></tr></thead>
+        <tbody>${rows.map(row=>`<tr>
+          ${row.showRound?`<td class="round-cell" rowspan="${row.roundSpan}">${row.round}R</td>`:''}
+          <td class="court-cell">${row.court}코트</td>
+          <td class="team1-cell">${esc(row.team1)}</td>
+          <td class="overview-score">${row.score}</td>
+          <td class="team2-cell">${esc(row.team2)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+function printOverview(){
+  showTab('overview');
+  setTimeout(()=>window.print(),50);
+}
+function exportOverviewCSV(){
+  if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
+  const rows=[['라운드','코트','팀1 선수1','팀1 선수2','팀1 점수','팀2 선수1','팀2 선수2','팀2 점수']];
+  schedule.forEach(r=>r.matches.forEach(m=>rows.push([
+    r.round,m.court,m.team1[0].name,m.team1[1].name,m.score1,
+    m.team2[0].name,m.team2[1].name,m.score2
+  ])));
+  const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+  downloadBlob(csv,'오늘콕_한눈에보기.csv','text/csv;charset=utf-8');
+}
+
+function renderSchedule(){
+  if(!schedule.length){scheduleArea.className='empty';scheduleArea.innerHTML='선수 명단을 입력한 뒤 ‘대진표 만들기’를 눌러주세요.';statsArea.innerHTML='대진표를 만들면 선수별 경기 수가 표시됩니다.';overviewArea.className='empty';overviewArea.innerHTML='대진표를 만들면 전체 경기가 한 장의 표로 표시됩니다.';return}
+  scheduleArea.className='';
+  scheduleArea.innerHTML=schedule.map((r,ri)=>`<div class="round">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <h3>${r.round}라운드</h3>
+      <button class="secondary small-btn no-print" onclick="addBlankMatch(${ri})">경기 추가</button>
+    </div>
+    <table class="match-table"><thead><tr><th>코트</th><th>팀1 선수</th><th>점수</th><th>팀2 선수</th><th>점수</th><th class="no-print">수정</th></tr></thead>
+    <tbody>${r.matches.map((m,mi)=>`<tr>
+      <td><input class="score" type="number" min="1" value="${m.court}" onchange="changeCourt(${ri},${mi},this.value)"></td>
+      <td>
+        <select class="edit-select" onchange="changeMatchPlayer(${ri},${mi},1,0,this.value)">${playerOptions(m.team1[0].id,'팀1')}</select>
+        <select class="edit-select" onchange="changeMatchPlayer(${ri},${mi},1,1,this.value)">${playerOptions(m.team1[1].id,'팀1')}</select>
+      </td>
+      <td><input class="score" type="number" value="${m.score1}" onchange="setScore(${ri},${mi},1,this.value)"></td>
+      <td>
+        <select class="edit-select" onchange="changeMatchPlayer(${ri},${mi},2,0,this.value)">${playerOptions(m.team2[0].id,'팀2')}</select>
+        <select class="edit-select" onchange="changeMatchPlayer(${ri},${mi},2,1,this.value)">${playerOptions(m.team2[1].id,'팀2')}</select>
+      </td>
+      <td><input class="score" type="number" value="${m.score2}" onchange="setScore(${ri},${mi},2,this.value)"></td>
+      <td class="no-print"><div class="edit-actions"><button class="danger small-btn" onclick="deleteMatch(${ri},${mi})">삭제</button></div></td>
+    </tr>`).join('')}</tbody></table></div>`).join('');
+  renderStats();
+  renderOverview();
+}
+function setScore(ri,mi,team,val){schedule[ri].matches[mi]['score'+team]=val;localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));renderStats()}
+function renderStats(){
+  const stats={};
+  const teamTotals={
+    '팀1':{matches:0,wins:0,losses:0,draws:0,pointsFor:0,pointsAgainst:0},
+    '팀2':{matches:0,wins:0,losses:0,draws:0,pointsFor:0,pointsAgainst:0}
+  };
+  schedule.forEach(r=>r.matches.forEach(m=>{
+    [...m.team1,...m.team2].forEach(p=>{
+      const team=p.team||'팀1';
+      stats[p.id]??={name:p.name,team,games:0,wins:0,losses:0,draws:0};
+      stats[p.id].games++;
+    });
+    if(m.score1===''||m.score2==='')return;
+    const a=Number(m.score1),b=Number(m.score2);
+    teamTotals['팀1'].matches++; teamTotals['팀2'].matches++;
+    teamTotals['팀1'].pointsFor+=a; teamTotals['팀1'].pointsAgainst+=b;
+    teamTotals['팀2'].pointsFor+=b; teamTotals['팀2'].pointsAgainst+=a;
+    const result=a===b?0:a>b?1:2;
+    if(result===0){
+      teamTotals['팀1'].draws++;teamTotals['팀2'].draws++;
+    }else if(result===1){
+      teamTotals['팀1'].wins++;teamTotals['팀2'].losses++;
+    }else{
+      teamTotals['팀2'].wins++;teamTotals['팀1'].losses++;
+    }
+    m.team1.forEach(p=>stats[p.id][result===0?'draws':result===1?'wins':'losses']++);
+    m.team2.forEach(p=>stats[p.id][result===0?'draws':result===2?'wins':'losses']++);
+  }));
+
+  const teamTable=(team)=>{
+    const rows=Object.values(stats).filter(s=>s.team===team).sort((a,b)=>b.games-a.games||a.name.localeCompare(b.name));
+    return `<div class="team-stat-box"><h3>${team} 선수별 통계</h3>
+      <table class="match-table"><thead><tr><th>선수</th><th>경기</th><th>승</th><th>패</th><th>무</th></tr></thead>
+      <tbody>${rows.length?rows.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${s.games}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.draws}</td></tr>`).join(''):'<tr><td colspan="5">등록된 기록이 없습니다.</td></tr>'}</tbody></table>
+    </div>`;
+  };
+  const t1=teamTotals['팀1'],t2=teamTotals['팀2'];
+  statsArea.className='';
+  statsArea.innerHTML=`
+    <div class="team-scoreboard">
+      <div class="team-total"><span>팀1</span><strong>${t1.wins}승</strong><small>${t1.losses}패 ${t1.draws}무 · 득점 ${t1.pointsFor}</small></div>
+      <b>VS</b>
+      <div class="team-total"><span>팀2</span><strong>${t2.wins}승</strong><small>${t2.losses}패 ${t2.draws}무 · 득점 ${t2.pointsFor}</small></div>
+    </div>
+    <div class="team-stats-grid">${teamTable('팀1')}${teamTable('팀2')}</div>`;
+}
+function showTab(name){
+  scheduleTab.classList.toggle('hidden',name!=='schedule');
+  overviewTab.classList.toggle('hidden',name!=='overview');
+  statsTab.classList.toggle('hidden',name!=='stats');
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  if(name==='overview')renderOverview();
+}
+function exportCSV(){
+  if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
+  const rows=[['라운드','코트','팀1 선수1','팀1 선수2','팀1 점수','팀2 선수1','팀2 선수2','팀2 점수']];
+  schedule.forEach(r=>r.matches.forEach(m=>rows.push([r.round,m.court,m.team1[0].name,m.team1[1].name,m.score1,m.team2[0].name,m.team2[1].name,m.score2])));
+  const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
+  downloadBlob(csv,'오늘콕_대진표.csv','text/csv;charset=utf-8');
+}
+function exportRoster(){downloadBlob(JSON.stringify(players,null,2),'오늘콕_명단.json','application/json')}
+function importRoster(e){
+  const f=e.target.files[0];if(!f)return;const reader=new FileReader();
+  reader.onload=()=>{try{const data=JSON.parse(reader.result);if(!Array.isArray(data))throw 0;players=data.map((p,i)=>({id:p.id||uid(),name:String(p.name),gender:p.gender==='남'?'남':'여',grade:['S','A','B','C','D'].includes(p.grade)?p.grade:'D',team:p.team==='팀2'?'팀2':'팀1'}));savePlayers()}catch{alert('올바른 명단 파일이 아닙니다.')}};
+  reader.readAsText(f);e.target.value='';
+}
+function downloadBlob(data,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+function resetAll(){
+  if(!confirm('명단, 설정, 대진표를 모두 지울까요?'))return;
+  localStorage.removeItem('todaycock_players');localStorage.removeItem('todaycock_schedule');localStorage.removeItem('todaycock_settings');
+  players=[];schedule=[];location.reload();
+}
+document.getElementById('playerName').addEventListener('keydown',e=>{if(e.key==='Enter')addPlayer()});
+loadSettings();renderPlayers();renderSchedule();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  const banner=document.getElementById('installBanner');
+  if(banner)banner.style.display='block';
+});
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('installBtn');
+  if(btn)btn.addEventListener('click',async()=>{
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt=null;
+      document.getElementById('installBanner').style.display='none';
+    }else{
+      alert('아이폰은 Safari의 공유 버튼을 누른 뒤 “홈 화면에 추가”를 선택해주세요.');
+    }
+  });
+});
+window.addEventListener('appinstalled',()=>{
+  const banner=document.getElementById('installBanner');
+  if(banner)banner.style.display='none';
+});
+
+</script>
+</body>
+</html>
