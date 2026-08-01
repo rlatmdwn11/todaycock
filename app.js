@@ -1027,3 +1027,144 @@ setTimeout(()=>{
   }
   showRecoveryModalIfNeeded();
 },250);
+
+
+// ===== Stable Fix 6: roster Excel import/export/template =====
+const ROSTER_COLUMNS=['이름','팀','성별','급수','고정파트너'];
+
+function normalizeTeam(value){
+  const text=String(value??'').trim().toLowerCase();
+  if(['팀2','team2','2','b'].includes(text))return '팀2';
+  return '팀1';
+}
+function normalizeGender(value){
+  const text=String(value??'').trim().toLowerCase();
+  if(['남','남자','m','male'].includes(text))return '남';
+  return '여';
+}
+function normalizeGrade(value){
+  const grade=String(value??'A').trim().toUpperCase();
+  return ['S','A','B','C','D'].includes(grade)?grade:'A';
+}
+function ensureExcelLibrary(){
+  if(typeof XLSX==='undefined'){
+    alert('엑셀 기능을 불러오지 못했습니다. 인터넷 연결 후 다시 시도해주세요.');
+    return false;
+  }
+  return true;
+}
+function rosterRowsFromPlayers(){
+  const partnerNameById={};
+  const fixedPairs=state.fixedPairs||{team1:[],team2:[]};
+  [...(fixedPairs.team1||[]),...(fixedPairs.team2||[])].forEach(pair=>{
+    if(pair?.[0]&&pair?.[1]){
+      partnerNameById[pair[0]]=state.players.find(p=>p.id===pair[1])?.name||'';
+      partnerNameById[pair[1]]=state.players.find(p=>p.id===pair[0])?.name||'';
+    }
+  });
+  return state.players.map(player=>({
+    이름:player.name,
+    팀:player.team||'팀1',
+    성별:player.gender||'여',
+    급수:player.grade||'A',
+    고정파트너:partnerNameById[player.id]||''
+  }));
+}
+function downloadWorkbook(rows,fileName,sheetName='선수명단'){
+  if(!ensureExcelLibrary())return;
+  const worksheet=XLSX.utils.json_to_sheet(rows,{header:ROSTER_COLUMNS});
+  worksheet['!cols']=[{wch:16},{wch:10},{wch:10},{wch:10},{wch:16}];
+  const workbook=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook,worksheet,sheetName);
+  XLSX.writeFile(workbook,fileName);
+}
+function downloadRosterTemplate(){
+  downloadWorkbook([
+    {이름:'홍길동',팀:'팀1',성별:'남',급수:'A',고정파트너:'김민수'},
+    {이름:'김민수',팀:'팀1',성별:'남',급수:'B',고정파트너:'홍길동'},
+    {이름:'이영희',팀:'팀2',성별:'여',급수:'A',고정파트너:''}
+  ],'오늘콕_선수명단_양식.xlsx','입력양식');
+}
+function exportRosterExcel(){
+  if(!state.players.length){
+    toast('내보낼 선수 명단이 없습니다.');
+    return;
+  }
+  downloadWorkbook(rosterRowsFromPlayers(),'오늘콕_선수명단.xlsx');
+}
+function buildImportedPlayers(rows){
+  const players=[];
+  const partnerRequests=[];
+  rows.forEach((row,index)=>{
+    const name=String(row['이름']??row['name']??'').trim();
+    if(!name)return;
+    const player={
+      id:uid(),
+      name,
+      team:normalizeTeam(row['팀']??row['team']),
+      gender:normalizeGender(row['성별']??row['gender']),
+      grade:normalizeGrade(row['급수']??row['grade'])
+    };
+    players.push(player);
+    const partner=String(row['고정파트너']??row['파트너']??row['partner']??'').trim();
+    if(partner)partnerRequests.push({name,partner});
+  });
+  return {players,partnerRequests};
+}
+function applyImportedFixedPairs(players,partnerRequests){
+  const pairs={team1:[],team2:[]};
+  const used=new Set();
+  const byName={};
+  players.forEach(player=>{byName[player.name]=player});
+  partnerRequests.forEach(request=>{
+    const a=byName[request.name],b=byName[request.partner];
+    if(!a||!b||a.team!==b.team||used.has(a.id)||used.has(b.id))return;
+    const key=a.team==='팀2'?'team2':'team1';
+    pairs[key].push([a.id,b.id]);
+    used.add(a.id);used.add(b.id);
+  });
+  return pairs;
+}
+async function importRosterExcelFile(file){
+  if(!ensureExcelLibrary())return;
+  try{
+    const data=await file.arrayBuffer();
+    const workbook=XLSX.read(data,{type:'array'});
+    const firstSheet=workbook.Sheets[workbook.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(firstSheet,{defval:''});
+    const imported=buildImportedPlayers(rows);
+    if(!imported.players.length)throw new Error('EMPTY_ROSTER');
+    const replace=state.players.length
+      ? confirm(`현재 명단 ${state.players.length}명을 지우고 엑셀 명단 ${imported.players.length}명으로 교체할까요?\n취소를 누르면 기존 명단 뒤에 추가됩니다.`)
+      : true;
+    pushUndo();
+    if(replace){
+      state.players=imported.players;
+      state.fixedPairs=applyImportedFixedPairs(state.players,imported.partnerRequests);
+    }else{
+      const combined=[...state.players,...imported.players];
+      state.players=combined;
+      const importedPairs=applyImportedFixedPairs(imported.players,imported.partnerRequests);
+      state.fixedPairs=state.fixedPairs||{team1:[],team2:[]};
+      state.fixedPairs.team1=[...(state.fixedPairs.team1||[]),...importedPairs.team1];
+      state.fixedPairs.team2=[...(state.fixedPairs.team2||[]),...importedPairs.team2];
+    }
+    state.schedule=[];
+    persistStateNow();
+    renderAll();
+    toast(`선수 ${imported.players.length}명을 불러왔습니다.`);
+  }catch(error){
+    console.error(error);
+    alert('엑셀 명단을 읽지 못했습니다. 오늘콕 양식의 열 이름을 확인해주세요.');
+  }
+}
+document.getElementById('downloadRosterTemplateBtn')?.addEventListener('click',downloadRosterTemplate);
+document.getElementById('exportRosterExcelBtn')?.addEventListener('click',exportRosterExcel);
+document.getElementById('importRosterExcelBtn')?.addEventListener('click',()=>{
+  document.getElementById('rosterExcelInput')?.click();
+});
+document.getElementById('rosterExcelInput')?.addEventListener('change',event=>{
+  const file=event.target.files?.[0];
+  event.target.value='';
+  if(file)importRosterExcelFile(file);
+});

@@ -238,3 +238,36 @@ html,body{max-width:100%;overflow-x:hidden}
   .save-status-bar{align-items:flex-start;flex-direction:column}
   .operator-toolbar{grid-template-columns:1fr 1fr}
 }
+
+
+/* Stable Fix 6: roster Excel and mobile date */
+.excel-toolbar{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:12px
+}
+.excel-toolbar .btn{
+  width:100%;
+  min-width:0;
+  white-space:nowrap
+}
+.excel-help{margin-bottom:2px}
+input[type="date"]{
+  display:block;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+  -webkit-appearance:none;
+  appearance:none
+}
+.form-grid>div,.sub-panel,.card{min-width:0}
+@media(max-width:560px){
+  .excel-toolbar{grid-template-columns:1fr}
+  input[type="date"]{
+    font-size:16px;
+    padding-left:12px;
+    padding-right:8px
+  }
+}

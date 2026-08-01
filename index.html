@@ -20,7 +20,7 @@
         <h1>오늘콕</h1>
         <p class="brand-en">TODAYCOCK</p>
         <p class="brand-sub">배드민턴 대진 매니저</p>
-        <p class="brand-meta">Version 2.0 Stable · Fix 5 · Made by 김승주</p>
+        <p class="brand-meta">Version 2.0 Stable · Fix 6 · Made by 김승주</p>
         <div class="mode-buttons">
           <button class="btn primary" id="openAdminBtn">운영자 모드</button>
           <button class="btn secondary" id="openViewerBtn">관람 모드</button>
@@ -208,6 +208,15 @@
             </select>
             <button class="btn primary compact" id="addPlayerBtn">선수 추가</button>
           </div>
+
+
+          <div class="excel-toolbar">
+            <button class="btn secondary compact" id="downloadRosterTemplateBtn">엑셀 양식</button>
+            <button class="btn secondary compact" id="importRosterExcelBtn">엑셀 불러오기</button>
+            <button class="btn secondary compact" id="exportRosterExcelBtn">명단 내보내기</button>
+            <input id="rosterExcelInput" type="file" accept=".xlsx,.xls,.csv" hidden>
+          </div>
+          <p class="help excel-help">양식 열: 이름 · 팀 · 성별 · 급수 · 고정파트너</p>
 
           <div class="toolbar">
             <div class="segmented" id="teamFilter">
@@ -411,6 +420,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script src="firebase.js?v=20260801-fix3"></script>
   <script src="schedule.js?v=20260801-fix3"></script>
