@@ -1,10 +1,19 @@
-TODAYCOCK Version 2.0 Final Mobile · Fix 3
+TODAYCOCK Version 2.0 Final Mobile · Fix 4
 
-수정:
-- 팀 대항 고정 파트너 설정 및 자동 짝짓기 복원
-- AI 대진 도우미 복원
-- 대진 생성 후 모바일 화면 가로 초과 수정
-- 전체 대진표 모바일 카드형 UI 수정
-- 참가 통계를 팀별로 분리
+아이콘 수정
+- icon-192.png 추가
+- icon-512.png 추가
+- apple-touch-icon.png 추가
+- manifest.json 아이콘 정보 추가
+- iPhone 홈 화면 아이콘 연결 추가
+- 아이콘 캐시 방지를 위한 버전 주소 추가
 
-운영자 코드 1111 / 설정 비밀번호 todaycock01
+적용 방법
+1. ZIP 안의 모든 파일을 GitHub 저장소 최상위에 덮어쓰기
+2. Commit changes
+3. 기존 홈 화면의 오늘콕 앱을 삭제
+4. Safari에서 GitHub Pages 주소 뒤에 ?iconfix4 를 붙여 접속
+5. 공유 버튼 → 홈 화면에 추가
+
+중요:
+기존 홈 화면 아이콘은 자동으로 바뀌지 않으므로 반드시 삭제 후 다시 추가해야 합니다.
