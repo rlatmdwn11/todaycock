@@ -1030,9 +1030,76 @@
       line-height:1.5;
     }
 
+
+    /* v4.1 unified file button */
+    label.file-button{
+      width:100%;
+      min-height:46px;
+      height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:0 16px !important;
+      margin:0;
+      border:0 !important;
+      border-radius:14px !important;
+      background:white;
+      color:var(--ink);
+      font-weight:800;
+      font-size:15px;
+      cursor:pointer;
+      box-shadow:none;
+    }
+    label.file-button:hover{background:#f7fbf8}
+
+
+    /* v4.2 realtime sharing */
+    .live-status-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin:12px 0 14px;
+    }
+    .live-status-item{
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#f7fbf8;
+    }
+    .live-status-item span{
+      display:block;
+      color:#718078;
+      font-size:12px;
+      margin-bottom:4px;
+    }
+    .live-status-item strong{
+      display:block;
+      color:var(--green);
+      font-size:15px;
+    }
+    .live-sync-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 9px;
+      border-radius:999px;
+      background:#e8f4ec;
+      color:var(--green);
+      font-size:12px;
+      font-weight:800;
+    }
+    @media(max-width:760px){
+      .live-status-grid{grid-template-columns:1fr}
+    }
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="firebase-config.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
 </head>
 <body>
 
@@ -1042,7 +1109,7 @@
     <h1 class="v4-ko-title">오늘콕</h1>
     <div class="v4-en-title">TODAYCOCK</div>
     <div class="v4-subtitle">배드민턴 대진 매니저</div>
-    <div class="v4-version">Version 4.0</div>
+    <div class="v4-version">Version 4.2</div>
     <div class="v4-maker">Made by 김승주</div>
 
     <div class="v4-mode-buttons">
@@ -1070,7 +1137,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v4.0</h2>
+      <h2>오늘콕 v4.2</h2>
       <span class="v2-badge">Made by 김승주</span>
     </div>
 
@@ -1089,8 +1156,8 @@
     <div class="event-info-grid" id="eventInfoFields">
       <div><label>팀전 이름</label><input id="eventName" placeholder="예: 오늘콕 vs 셔틀퀸" disabled></div>
       <div><label>날짜</label><input id="eventDate" type="date" disabled></div>
-      <div><label>팀1 이름</label><input id="team1Name" placeholder="팀1" disabled></div>
-      <div><label>팀2 이름</label><input id="team2Name" placeholder="팀2" disabled></div>
+      <div><label>팀1 이름</label><input id="team1Name" placeholder="${sideLabel(1)}" disabled></div>
+      <div><label>팀2 이름</label><input id="team2Name" placeholder="${sideLabel(2)}" disabled></div>
     </div>
     <div class="actions">
       <button class="secondary" onclick="saveEventInfo()">팀전 정보 저장</button>
@@ -1136,6 +1203,23 @@
   </div>
 </div>
 
+
+<div class="modal-backdrop" id="firebaseLoginModal">
+  <div class="modal-box">
+    <h3>운영자 로그인</h3>
+    <p class="muted">Firebase Authentication에 만든 운영자 계정으로 로그인해주세요.</p>
+    <label>이메일</label>
+    <input id="firebaseEmail" type="email" autocomplete="username" placeholder="운영자 이메일">
+    <label>비밀번호</label>
+    <input id="firebasePassword" type="password" autocomplete="current-password" placeholder="비밀번호">
+    <div class="actions">
+      <button class="primary" type="button" onclick="firebaseLogin()">로그인</button>
+      <button class="ghost" type="button" onclick="closeModal('firebaseLoginModal')">닫기</button>
+    </div>
+    <p class="muted" id="firebaseLoginMessage"></p>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="unlockModal">
   <div class="modal-box">
     <h3>오늘콕 잠금</h3>
@@ -1155,8 +1239,8 @@
         <div><label>대진 방식</label><select id="method" onchange="toggleFixedPartnerBox()">
           <option value="interteam" selected>팀1 vs 팀2 팀전</option>
           <option value="balanced">모임 내 균형 순환</option>
-          <option value="random">완전 랜덤 대진</option>
-          <option value="fixed">고정 파트너 팀전</option>
+          <option value="random">모임 내 완전 랜덤</option>
+          <option value="fixed">팀 대항 고정 파트너전</option>
         </select></div>
       </div>
       <div class="row3">
@@ -1179,7 +1263,7 @@
         <div class="section-head">
           <div>
             <b>고정 파트너 설정</b>
-            <div class="muted">각 팀에서 두 명씩 짝을 지정해주세요.</div>
+            <div class="muted">팀1과 팀2에서 각각 두 명씩 고정 파트너를 지정해주세요.</div>
           </div>
           <button class="secondary small-btn" type="button" onclick="autoPairPartners()">자동 짝짓기</button>
         </div>
@@ -1220,7 +1304,7 @@
         <button class="secondary" onclick="addSample()">가상 명단 넣기</button>
         <button class="ghost" onclick="exportRosterExcel()">엑셀 내보내기</button>
         <button class="ghost" onclick="downloadRosterTemplate()">엑셀 양식 받기</button>
-        <label class="ghost" style="padding:10px 14px;cursor:pointer">엑셀/CSV 불러오기<input type="file" accept=".xlsx,.xls,.csv,.json" onchange="importRosterFile(event)" style="display:none"></label>
+        <label class="ghost file-button">엑셀/CSV 불러오기<input type="file" accept=".xlsx,.xls,.csv,.json" onchange="importRosterFile(event)" style="display:none"></label>
       </div>
 
 
@@ -1253,26 +1337,43 @@
     </section>
 
 
-    <section class="card full no-print" id="liveShareCard">
-      <h2>실시간 관람 공유</h2>
-      <p class="muted">Firebase 연결 후 운영자가 점수를 입력하면 관람자 화면에 실시간으로 반영됩니다.</p>
-      <div class="row">
-        <div>
-          <label>팀전 공유 코드</label>
-          <input id="liveRoomCode" placeholder="예: KOK-8274" readonly>
-        </div>
-        <div>
-          <label>공유 상태</label>
-          <input id="liveShareStatus" value="Firebase 연결 전" readonly>
-        </div>
-      </div>
-      <div class="actions">
-        <button class="primary" type="button" onclick="startLiveShare()">공유 시작</button>
-        <button class="secondary" type="button" onclick="copyViewerLink()">관람 링크 복사</button>
-        <button class="danger" type="button" onclick="stopLiveShare()">공유 종료</button>
-      </div>
-      <p class="notice">※ 이 버전에는 화면과 구조가 준비되어 있으며, 실제 실시간 공유는 Firebase 설정 후 활성화됩니다.</p>
-    </section>
+    
+<section class="card full no-print" id="liveShareCard">
+  <h2>실시간 관람 공유</h2>
+  <p class="muted">운영자는 로그인 후 공유를 시작하고, 참가자는 링크만 열어 읽기 전용으로 볼 수 있어요.</p>
+
+  <div class="live-status-grid">
+    <div class="live-status-item">
+      <span>운영자 로그인</span>
+      <strong id="firebaseAuthStatus">로그아웃</strong>
+    </div>
+    <div class="live-status-item">
+      <span>공유 상태</span>
+      <strong id="liveShareStatusText">공유 안 함</strong>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>팀전 공유 코드</label>
+      <input id="liveRoomCode" placeholder="공유 시작 후 자동 생성" readonly>
+    </div>
+    <div>
+      <label>관람 링크</label>
+      <input id="liveViewerUrl" placeholder="공유 시작 후 생성" readonly>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="ghost" type="button" onclick="openFirebaseLogin()">운영자 로그인</button>
+    <button class="primary" type="button" onclick="startLiveShare()">공유 시작</button>
+    <button class="secondary" type="button" onclick="copyViewerLink()">관람 링크 복사</button>
+    <button class="danger" type="button" onclick="stopLiveShare()">공유 종료</button>
+  </div>
+
+  <p class="notice">※ 공유 중에는 점수, 진행률, 대진 변경이 관람 화면에 자동 반영됩니다.</p>
+</section>
+
 
     <section class="card full" id="resultCard">
       <div class="tabs no-print">
@@ -1558,10 +1659,20 @@ function generateSchedule(){
   localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));renderSchedule();showTab('schedule');
 }
 
+
+function isTeamBattleMode(){
+  return method.value==='fixed';
+}
+function sideLabel(side){
+  if(isTeamBattleMode())return side===1?(eventInfo.team1||'팀1'):(eventInfo.team2||'팀2');
+  return side===1?'조 A':'조 B';
+}
+
 function playerOptions(selectedId, requiredTeam){
+  const forceTeam=method.value==='fixed';
   return players
-    .filter(p=>!requiredTeam || (p.team||'팀1')===requiredTeam)
-    .map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${esc(p.name)} (${p.grade}·${p.team||'팀1'})</option>`)
+    .filter(p=>!forceTeam || !requiredTeam || (p.team||'팀1')===requiredTeam)
+    .map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${esc(p.name)} (${p.grade}${forceTeam?'·'+(p.team||'팀1'):''})</option>`)
     .join('');
 }
 function changeMatchPlayer(ri,mi,side,pos,playerId){
@@ -1620,7 +1731,7 @@ function renderOverview(){
   overviewArea.className='';
   overviewArea.innerHTML=`
     <div class="overview-head">
-      <div><b>${esc(eventInfo.name||'배드민턴 팀전')}</b><div class="muted">${esc(eventInfo.date||'')} · ${esc(eventInfo.team1||'팀1')} vs ${esc(eventInfo.team2||'팀2')}</div></div>
+      <div><b>${esc(eventInfo.name||'배드민턴 팀전')}</b><div class="muted">${esc(eventInfo.date||'')} · ${isTeamBattleMode()?`${esc(eventInfo.team1||'팀1')} vs ${esc(eventInfo.team2||'팀2')}`:'모임 내 대진'}</div></div>
       <div class="overview-summary">
         <span>총 ${schedule.length}라운드</span>
         <span>총 ${totalMatches}경기</span>
@@ -1655,7 +1766,7 @@ function printOverview(){
 }
 function exportOverviewCSV(){
   if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
-  const rows=[['라운드','코트','팀1 선수1','팀1 선수2','팀1 점수','팀2 선수1','팀2 선수2','팀2 점수']];
+  const rows=[['라운드','코트',isTeamBattleMode()?'팀1 선수1':'조A 선수1',isTeamBattleMode()?'팀1 선수2':'조A 선수2',isTeamBattleMode()?'팀1 점수':'조A 점수',isTeamBattleMode()?'팀2 선수1':'조B 선수1',isTeamBattleMode()?'팀2 선수2':'조B 선수2',isTeamBattleMode()?'팀2 점수':'조B 점수']];
   schedule.forEach(r=>r.matches.forEach(m=>rows.push([
     r.round,m.court,m.team1[0].name,m.team1[1].name,m.score1,
     m.team2[0].name,m.team2[1].name,m.score2
@@ -1709,23 +1820,23 @@ function renderSchedule(){
         <button class="danger small-btn no-print" onclick="deleteMatch(${ri},${mi})">삭제</button>
       </div>
       <div class="schedule-team">
-        <div class="schedule-team-label">팀1</div>
+        <div class="schedule-team-label">${sideLabel(1)}</div>
         <div class="schedule-team-controls">
           <select onchange="changeMatchPlayer(${ri},${mi},1,0,this.value)">${playerOptions(m.team1[0].id,'팀1')}</select>
           <select onchange="changeMatchPlayer(${ri},${mi},1,1,this.value)">${playerOptions(m.team1[1].id,'팀1')}</select>
         </div>
       </div>
       <div class="schedule-team">
-        <div class="schedule-team-label">팀2</div>
+        <div class="schedule-team-label">${sideLabel(2)}</div>
         <div class="schedule-team-controls">
           <select onchange="changeMatchPlayer(${ri},${mi},2,0,this.value)">${playerOptions(m.team2[0].id,'팀2')}</select>
           <select onchange="changeMatchPlayer(${ri},${mi},2,1,this.value)">${playerOptions(m.team2[1].id,'팀2')}</select>
         </div>
       </div>
       <div class="schedule-score-row">
-        <input type="number" value="${m.score1}" placeholder="팀1 점수" onchange="setScore(${ri},${mi},1,this.value)">
+        <input type="number" value="${m.score1}" placeholder="${sideLabel(1)} 점수" onchange="setScore(${ri},${mi},1,this.value)">
         <b>:</b>
-        <input type="number" value="${m.score2}" placeholder="팀2 점수" onchange="setScore(${ri},${mi},2,this.value)">
+        <input type="number" value="${m.score2}" placeholder="${sideLabel(2)} 점수" onchange="setScore(${ri},${mi},2,this.value)">
       </div>
     </div>`).join('')}</div>
     </div>`).join('');
@@ -1733,6 +1844,7 @@ function renderSchedule(){
   renderOverview();
   renderProgress();
   renderCurrentMatch();
+  syncLiveRoom();
 }
 function setScore(ri,mi,team,val){
   schedule[ri].matches[mi]['score'+team]=val;
@@ -1741,6 +1853,7 @@ function setScore(ri,mi,team,val){
   renderOverview();
   renderProgress();
   renderCurrentMatch();
+  syncLiveRoom();
 }
 function renderStats(){
   const stats={};
@@ -1748,48 +1861,69 @@ function renderStats(){
     '팀1':{matches:0,wins:0,losses:0,draws:0,pointsFor:0,pointsAgainst:0},
     '팀2':{matches:0,wins:0,losses:0,draws:0,pointsFor:0,pointsAgainst:0}
   };
+
   schedule.forEach(r=>r.matches.forEach(m=>{
     [...m.team1,...m.team2].forEach(p=>{
       const team=p.team||'팀1';
       stats[p.id]??={name:p.name,team,games:0,wins:0,losses:0,draws:0};
       stats[p.id].games++;
     });
+
     if(m.score1===''||m.score2==='')return;
     const a=Number(m.score1),b=Number(m.score2);
-    teamTotals['팀1'].matches++; teamTotals['팀2'].matches++;
-    teamTotals['팀1'].pointsFor+=a; teamTotals['팀1'].pointsAgainst+=b;
-    teamTotals['팀2'].pointsFor+=b; teamTotals['팀2'].pointsAgainst+=a;
     const result=a===b?0:a>b?1:2;
-    if(result===0){
-      teamTotals['팀1'].draws++;teamTotals['팀2'].draws++;
-    }else if(result===1){
-      teamTotals['팀1'].wins++;teamTotals['팀2'].losses++;
-    }else{
-      teamTotals['팀2'].wins++;teamTotals['팀1'].losses++;
+
+    if(isTeamBattleMode()){
+      teamTotals['팀1'].matches++; teamTotals['팀2'].matches++;
+      teamTotals['팀1'].pointsFor+=a; teamTotals['팀1'].pointsAgainst+=b;
+      teamTotals['팀2'].pointsFor+=b; teamTotals['팀2'].pointsAgainst+=a;
+      if(result===0){
+        teamTotals['팀1'].draws++;teamTotals['팀2'].draws++;
+      }else if(result===1){
+        teamTotals['팀1'].wins++;teamTotals['팀2'].losses++;
+      }else{
+        teamTotals['팀2'].wins++;teamTotals['팀1'].losses++;
+      }
     }
+
     m.team1.forEach(p=>stats[p.id][result===0?'draws':result===1?'wins':'losses']++);
     m.team2.forEach(p=>stats[p.id][result===0?'draws':result===2?'wins':'losses']++);
   }));
 
-  const teamTable=(team)=>{
-    const rows=Object.values(stats).filter(s=>s.team===team).sort((a,b)=>b.games-a.games||a.name.localeCompare(b.name));
-    return `<div class="team-stat-box"><h3>${team==='팀1'?esc(eventInfo.team1||'팀1'):esc(eventInfo.team2||'팀2')} 선수별 통계</h3>
-      <table class="match-table"><thead><tr><th>선수</th><th>경기</th><th>승</th><th>패</th><th>무</th></tr></thead>
-      <tbody>${rows.length?rows.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${s.games}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.draws}</td></tr>`).join(''):'<tr><td colspan="5">등록된 기록이 없습니다.</td></tr>'}</tbody></table>
-    </div>`;
-  };
-  const t1=teamTotals['팀1'],t2=teamTotals['팀2'];
-  statsArea.className='';
-  const eligibleMvp=Object.values(stats).filter(s=>s.games>0).sort((a,b)=>b.wins-a.wins||((b.wins/b.games)-(a.wins/a.games))||b.games-a.games);
+  const rows=Object.values(stats).sort((a,b)=>b.games-a.games||b.wins-a.wins||a.name.localeCompare(b.name));
+  const eligibleMvp=rows.filter(s=>s.games>0).sort((a,b)=>b.wins-a.wins||((b.wins/b.games)-(a.wins/a.games))||b.games-a.games);
   const mvp=eligibleMvp[0];
-  statsArea.innerHTML=`
-    ${mvp?`<div class="mvp-box"><span>🏆 오늘의 MVP</span><strong>${esc(mvp.name)}</strong><small>${mvp.team} · ${mvp.games}경기 ${mvp.wins}승 · 승률 ${Math.round((mvp.wins/mvp.games)*100)}%</small></div>`:''}
-    <div class="team-scoreboard">
-      <div class="team-total"><span>${esc(eventInfo.team1||'팀1')}</span><strong>${t1.wins}승</strong><small>${t1.losses}패 ${t1.draws}무 · 득점 ${t1.pointsFor}</small></div>
-      <b>VS</b>
-      <div class="team-total"><span>${esc(eventInfo.team2||'팀2')}</span><strong>${t2.wins}승</strong><small>${t2.losses}패 ${t2.draws}무 · 득점 ${t2.pointsFor}</small></div>
-    </div>
-    <div class="team-stats-grid">${teamTable('팀1')}${teamTable('팀2')}</div>`;
+
+  const playerTable=(list,title)=>`<div class="team-stat-box">
+    <h3>${title}</h3>
+    <table class="match-table">
+      <thead><tr><th>선수</th><th>경기</th><th>승</th><th>패</th><th>무</th></tr></thead>
+      <tbody>${list.length?list.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${s.games}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.draws}</td></tr>`).join(''):'<tr><td colspan="5">등록된 기록이 없습니다.</td></tr>'}</tbody>
+    </table>
+  </div>`;
+
+  statsArea.className='';
+
+  if(isTeamBattleMode()){
+    const t1=teamTotals['팀1'],t2=teamTotals['팀2'];
+    const team1Rows=rows.filter(s=>s.team==='팀1');
+    const team2Rows=rows.filter(s=>s.team==='팀2');
+    statsArea.innerHTML=`
+      ${mvp?`<div class="mvp-box"><span>🏆 오늘의 MVP</span><strong>${esc(mvp.name)}</strong><small>${mvp.team} · ${mvp.games}경기 ${mvp.wins}승 · 승률 ${Math.round((mvp.wins/mvp.games)*100)}%</small></div>`:''}
+      <div class="team-scoreboard">
+        <div class="team-total"><span>${esc(eventInfo.team1||'팀1')}</span><strong>${t1.wins}승</strong><small>${t1.losses}패 ${t1.draws}무 · 득점 ${t1.pointsFor}</small></div>
+        <b>VS</b>
+        <div class="team-total"><span>${esc(eventInfo.team2||'팀2')}</span><strong>${t2.wins}승</strong><small>${t2.losses}패 ${t2.draws}무 · 득점 ${t2.pointsFor}</small></div>
+      </div>
+      <div class="team-stats-grid">
+        ${playerTable(team1Rows,esc(eventInfo.team1||'팀1')+' 선수별 통계')}
+        ${playerTable(team2Rows,esc(eventInfo.team2||'팀2')+' 선수별 통계')}
+      </div>`;
+  }else{
+    statsArea.innerHTML=`
+      ${mvp?`<div class="mvp-box"><span>🏆 오늘의 MVP</span><strong>${esc(mvp.name)}</strong><small>${mvp.games}경기 ${mvp.wins}승 · 승률 ${Math.round((mvp.wins/mvp.games)*100)}%</small></div>`:''}
+      ${playerTable(rows,'전체 선수 통계')}`;
+  }
 }
 function showTab(name){
   scheduleTab.classList.toggle('hidden',name!=='schedule');
@@ -1800,7 +1934,7 @@ function showTab(name){
 }
 function exportCSV(){
   if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
-  const rows=[['라운드','코트','팀1 선수1','팀1 선수2','팀1 점수','팀2 선수1','팀2 선수2','팀2 점수']];
+  const rows=[['라운드','코트',isTeamBattleMode()?'팀1 선수1':'조A 선수1',isTeamBattleMode()?'팀1 선수2':'조A 선수2',isTeamBattleMode()?'팀1 점수':'조A 점수',isTeamBattleMode()?'팀2 선수1':'조B 선수1',isTeamBattleMode()?'팀2 선수2':'조B 선수2',isTeamBattleMode()?'팀2 점수':'조B 점수']];
   schedule.forEach(r=>r.matches.forEach(m=>rows.push([r.round,m.court,m.team1[0].name,m.team1[1].name,m.score1,m.team2[0].name,m.team2[1].name,m.score2])));
   const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
   downloadBlob(csv,'오늘콕_대진표.csv','text/csv;charset=utf-8');
@@ -1883,9 +2017,9 @@ function renderCurrentMatch(){
       <div class="current-match-vs">VS</div>
       <div class="current-match-team">${esc(item.m.team2[0].name)} / ${esc(item.m.team2[1].name)}</div>
       <div class="current-match-score">
-        <input type="number" value="${item.m.score1}" placeholder="팀1" onchange="setScore(${item.ri},${item.mi},1,this.value);renderCurrentMatch()">
+        <input type="number" value="${item.m.score1}" placeholder="${sideLabel(1)}" onchange="setScore(${item.ri},${item.mi},1,this.value);renderCurrentMatch()">
         <b>:</b>
-        <input type="number" value="${item.m.score2}" placeholder="팀2" onchange="setScore(${item.ri},${item.mi},2,this.value);renderCurrentMatch()">
+        <input type="number" value="${item.m.score2}" placeholder="${sideLabel(2)}" onchange="setScore(${item.ri},${item.mi},2,this.value);renderCurrentMatch()">
       </div>
     </div>`;
 }
@@ -1894,6 +2028,7 @@ function moveCurrentMatch(delta){
   if(!total)return;
   currentMatchIndex=(currentMatchIndex+delta+total)%total;
   renderCurrentMatch();
+  syncLiveRoom();
 }
 
 function normalizeGender(v){
@@ -2146,6 +2281,7 @@ function saveEventInfo(){
   alert('팀전 정보를 저장했어요.');
   renderOverview();
   renderStats();
+  syncLiveRoom();
 }
 function saveCurrentEvent(){
   if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
@@ -2272,46 +2408,235 @@ function randomRoomCode(){
   for(let i=0;i<4;i++)code+=chars[Math.floor(Math.random()*chars.length)];
   return code;
 }
-function firebaseReady(){
-  return window.TODAYCOCK_FIREBASE_CONFIG &&
-         window.TODAYCOCK_FIREBASE_CONFIG.apiKey &&
-         !String(window.TODAYCOCK_FIREBASE_CONFIG.apiKey).includes('여기에');
+
+
+
+let firebaseApp=null;
+let firebaseAuth=null;
+let firebaseDb=null;
+let liveRoomRef=null;
+let liveSyncTimer=null;
+
+function initFirebase(){
+  try{
+    if(!window.firebase || !window.TODAYCOCK_FIREBASE_CONFIG)return false;
+    if(!firebase.apps.length){
+      firebaseApp=firebase.initializeApp(window.TODAYCOCK_FIREBASE_CONFIG);
+    }else{
+      firebaseApp=firebase.app();
+    }
+    firebaseAuth=firebase.auth();
+    firebaseDb=firebase.database();
+
+    firebaseAuth.onAuthStateChanged(user=>{
+      const valid=user && user.uid===window.TODAYCOCK_ADMIN_UID;
+      firebaseAuthStatus.textContent=valid?`로그인됨 (${user.email||'운영자'})`:'로그아웃';
+      if(user && !valid){
+        firebaseAuth.signOut();
+        alert('등록된 운영자 계정이 아닙니다.');
+      }
+    });
+    return true;
+  }catch(err){
+    console.error('Firebase init error',err);
+    return false;
+  }
 }
-function startLiveShare(){
-  if(!firebaseReady()){
-    alert('아직 Firebase 설정이 연결되지 않았어요. firebase-config.js에 설정값을 넣은 뒤 사용할 수 있어요.');
+
+function openFirebaseLogin(){
+  if(!initFirebase()){
+    alert('Firebase 초기화에 실패했어요. 인터넷 연결과 설정 파일을 확인해주세요.');
     return;
   }
-  const code=randomRoomCode();
-  liveRoomCode.value=code;
-  liveShareStatus.value='공유 중';
-  localStorage.setItem('todaycock_live_room',code);
-  alert(`공유 코드 ${code}가 생성됐어요.`);
+  openModal('firebaseLoginModal');
 }
+
+async function firebaseLogin(){
+  if(!initFirebase())return;
+  const email=firebaseEmail.value.trim();
+  const password=firebasePassword.value;
+  firebaseLoginMessage.textContent='';
+  if(!email||!password){
+    firebaseLoginMessage.textContent='이메일과 비밀번호를 모두 입력해주세요.';
+    return;
+  }
+  try{
+    const credential=await firebaseAuth.signInWithEmailAndPassword(email,password);
+    if(credential.user.uid!==window.TODAYCOCK_ADMIN_UID){
+      await firebaseAuth.signOut();
+      throw new Error('등록된 운영자 계정이 아닙니다.');
+    }
+    firebasePassword.value='';
+    closeModal('firebaseLoginModal');
+    alert('운영자 로그인에 성공했어요.');
+  }catch(err){
+    console.error(err);
+    firebaseLoginMessage.textContent='로그인에 실패했어요. 이메일과 비밀번호를 확인해주세요.';
+  }
+}
+
+function generateRoomCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code='KOK-';
+  for(let i=0;i<5;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+
+function getViewerUrl(code){
+  const base=location.href.replace(/index\.html.*$/,'').replace(/\?.*$/,'');
+  return `${base}viewer.html?room=${encodeURIComponent(code)}`;
+}
+
+function buildLivePayload(active=true){
+  const flat=schedule.flatMap(r=>r.matches);
+  const completed=flat.filter(m=>m.score1!==''&&m.score2!=='').length;
+  const total=flat.length;
+
+  let team1Wins=0,team2Wins=0,draws=0;
+  flat.forEach(m=>{
+    if(m.score1===''||m.score2==='')return;
+    const a=Number(m.score1),b=Number(m.score2);
+    if(a>b)team1Wins++;
+    else if(b>a)team2Wins++;
+    else draws++;
+  });
+
+  return {
+    active,
+    updatedAt:firebase.database.ServerValue.TIMESTAMP,
+    eventInfo:{
+      enabled:!!eventInfo.enabled,
+      name:eventInfo.name||'오늘콕 팀전',
+      date:eventInfo.date||'',
+      team1:eventInfo.team1||'팀1',
+      team2:eventInfo.team2||'팀2'
+    },
+    mode:method.value,
+    matchType:matchType.value,
+    progress:{completed,total,percent:total?Math.round(completed/total*100):0},
+    scoreboard:{team1Wins,team2Wins,draws},
+    currentMatchIndex,
+    schedule:schedule.map(r=>({
+      round:r.round,
+      matches:r.matches.map(m=>({
+        court:m.court,
+        team1:m.team1.map(p=>({id:p.id,name:p.name,team:p.team||'팀1',gender:p.gender,grade:p.grade})),
+        team2:m.team2.map(p=>({id:p.id,name:p.name,team:p.team||'팀1',gender:p.gender,grade:p.grade})),
+        score1:m.score1,
+        score2:m.score2
+      }))
+    }))
+  };
+}
+
+async function ensureAdminAuth(){
+  if(!initFirebase())throw new Error('Firebase 초기화 실패');
+  const user=firebaseAuth.currentUser;
+  if(!user||user.uid!==window.TODAYCOCK_ADMIN_UID){
+    openFirebaseLogin();
+    throw new Error('운영자 로그인이 필요합니다.');
+  }
+  return user;
+}
+
+async function startLiveShare(){
+  if(!schedule.length){
+    alert('먼저 대진표를 만들어주세요.');
+    return;
+  }
+  try{
+    await ensureAdminAuth();
+    let code=localStorage.getItem('todaycock_live_room');
+    if(!code)code=generateRoomCode();
+
+    liveRoomRef=firebaseDb.ref(`rooms/${code}`);
+    await liveRoomRef.set(buildLivePayload(true));
+
+    localStorage.setItem('todaycock_live_room',code);
+    liveRoomCode.value=code;
+    liveViewerUrl.value=getViewerUrl(code);
+    liveShareStatusText.textContent='공유 중';
+    alert(`실시간 공유를 시작했어요.\n공유 코드: ${code}`);
+  }catch(err){
+    if(err.message!=='운영자 로그인이 필요합니다.'){
+      console.error(err);
+      alert('공유를 시작하지 못했어요. Firebase 설정과 로그인 상태를 확인해주세요.');
+    }
+  }
+}
+
+async function syncLiveRoom(){
+  const code=localStorage.getItem('todaycock_live_room');
+  if(!code||!firebaseDb)return;
+  const user=firebaseAuth?.currentUser;
+  if(!user||user.uid!==window.TODAYCOCK_ADMIN_UID)return;
+
+  clearTimeout(liveSyncTimer);
+  liveSyncTimer=setTimeout(async()=>{
+    try{
+      await firebaseDb.ref(`rooms/${code}`).update(buildLivePayload(true));
+      liveShareStatusText.textContent='공유 중 · 방금 동기화';
+    }catch(err){
+      console.error('Live sync error',err);
+      liveShareStatusText.textContent='동기화 오류';
+    }
+  },180);
+}
+
+async function stopLiveShare(){
+  const code=localStorage.getItem('todaycock_live_room');
+  if(!code){
+    alert('현재 공유 중인 팀전이 없어요.');
+    return;
+  }
+  try{
+    await ensureAdminAuth();
+    await firebaseDb.ref(`rooms/${code}`).update({
+      active:false,
+      updatedAt:firebase.database.ServerValue.TIMESTAMP
+    });
+    localStorage.removeItem('todaycock_live_room');
+    liveRoomCode.value='';
+    liveViewerUrl.value='';
+    liveShareStatusText.textContent='공유 종료';
+    alert('실시간 공유를 종료했어요.');
+  }catch(err){
+    if(err.message!=='운영자 로그인이 필요합니다.'){
+      console.error(err);
+      alert('공유 종료에 실패했어요.');
+    }
+  }
+}
+
 function copyViewerLink(){
   const code=liveRoomCode.value||localStorage.getItem('todaycock_live_room')||'';
-  if(!code)return alert('먼저 공유를 시작해주세요.');
-  const url=`${location.origin}${location.pathname.replace(/index\.html$/,'')}viewer.html?room=${encodeURIComponent(code)}`;
+  if(!code){
+    alert('먼저 공유를 시작해주세요.');
+    return;
+  }
+  const url=getViewerUrl(code);
+  liveViewerUrl.value=url;
   if(navigator.clipboard&&window.isSecureContext){
     navigator.clipboard.writeText(url).then(()=>alert('관람 링크를 복사했어요.'));
   }else{
     prompt('아래 링크를 복사해주세요.',url);
   }
 }
-function stopLiveShare(){
-  localStorage.removeItem('todaycock_live_room');
-  liveRoomCode.value='';
-  liveShareStatus.value=firebaseReady()?'공유 종료':'Firebase 연결 전';
-  alert('공유를 종료했어요.');
-}
-document.addEventListener('DOMContentLoaded',()=>{
-  const savedMode=sessionStorage.getItem('todaycock_mode');
-  if(savedMode==='admin')document.getElementById('v4Splash').classList.add('hidden');
-  const room=localStorage.getItem('todaycock_live_room');
-  if(room){
-    liveRoomCode.value=room;
-    liveShareStatus.value=firebaseReady()?'공유 중':'Firebase 연결 전';
+
+function restoreLiveShareUi(){
+  const code=localStorage.getItem('todaycock_live_room');
+  if(code){
+    liveRoomCode.value=code;
+    liveViewerUrl.value=getViewerUrl(code);
+    liveShareStatusText.textContent='공유 중';
+  }else{
+    liveShareStatusText.textContent='공유 안 함';
   }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  initFirebase();
+  restoreLiveShareUi();
 });
 
 </script>

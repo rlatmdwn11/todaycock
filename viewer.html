@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#1f7a4d">
+  <title>오늘콕 관람 모드</title>
+  <script src="firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+  <style>
+    :root{--green:#1f7a4d;--green2:#54aa73;--ink:#24332b;--line:#dce7df;--muted:#718078}
+    *{box-sizing:border-box}
+    html,body{width:100%;max-width:100%;overflow-x:hidden}
+    body{margin:0;background:#f4f9f2;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR",sans-serif}
+    header{text-align:center;padding:26px 16px 14px}
+    h1{margin:0;color:var(--green);font-size:32px;letter-spacing:-2px}
+    .en{letter-spacing:2px;font-weight:900;color:#526a5e}
+    .subtitle{font-size:14px;color:var(--muted);margin-top:4px}
+    main{max-width:760px;margin:auto;padding:0 12px 50px}
+    .card{background:white;border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:12px}
+    .status{padding:24px 8px;text-align:center;color:var(--muted);line-height:1.5}
+    label{display:block;font-weight:800;font-size:13px;margin-bottom:7px}
+    input{width:100%;height:48px;border:1px solid var(--line);border-radius:14px;padding:0 14px;font-size:16px}
+    button{width:100%;height:48px;border:0;border-radius:14px;background:var(--green);color:white;font-weight:900;font-size:15px;margin-top:10px}
+    .event-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .event-head h2{margin:0;font-size:20px}
+    .badge{padding:5px 9px;border-radius:999px;background:#e8f4ec;color:var(--green);font-size:12px;font-weight:900;white-space:nowrap}
+    .scoreboard{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;text-align:center;margin-top:14px}
+    .score-team{padding:12px;border:1px solid var(--line);border-radius:14px;background:#f7fbf8}
+    .score-team span{display:block;color:var(--muted);font-size:12px}
+    .score-team strong{display:block;color:var(--green);font-size:24px;margin-top:3px}
+    .progress-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-weight:800}
+    .progress{height:10px;background:#dfeae2;border-radius:999px;overflow:hidden}
+    .bar{height:100%;width:0;background:var(--green);transition:width .25s}
+    .current{padding:14px;border:1px solid var(--line);border-radius:16px;background:#f7fbf8;text-align:center;margin-top:12px}
+    .meta{font-size:13px;color:var(--muted)}
+    .team{font-size:18px;font-weight:900;padding:9px}
+    .score{font-size:22px;font-weight:900;color:var(--green);padding:4px}
+    .match-list{display:grid;gap:9px}
+    .round-title{color:var(--green);font-weight:900;margin:14px 0 7px}
+    .match{border:1px solid var(--line);border-radius:14px;padding:11px;background:white}
+    .match-head{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-bottom:8px}
+    .match-vs{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center}
+    .side{padding:8px;border-radius:10px;background:#f7fbf8;font-weight:800}
+    .match-score{font-weight:900;color:var(--green);white-space:nowrap}
+    .ended{opacity:.78}
+    .pending .match-score{color:var(--muted)}
+    .hidden{display:none!important}
+  </style>
+</head>
+<body>
+<header>
+  <h1>오늘콕</h1>
+  <div class="en">TODAYCOCK</div>
+  <div class="subtitle">배드민턴 대진 매니저 · 읽기 전용 관람</div>
+</header>
+
+<main>
+  <section class="card" id="joinCard">
+    <label for="roomInput">팀전 코드</label>
+    <input id="roomInput" placeholder="예: KOK-8274">
+    <button id="joinBtn">관람 시작</button>
+  </section>
+
+  <section class="card">
+    <div id="viewerStatus" class="status">팀전 코드를 입력해주세요.</div>
+
+    <div id="viewerContent" class="hidden">
+      <div class="event-head">
+        <div>
+          <h2 id="eventTitle">오늘콕 팀전</h2>
+          <div class="meta" id="eventMeta"></div>
+        </div>
+        <span class="badge" id="liveBadge">실시간</span>
+      </div>
+
+      <div class="scoreboard" id="scoreboard">
+        <div class="score-team">
+          <span id="team1Label">팀1</span>
+          <strong id="team1Wins">0승</strong>
+        </div>
+        <b>VS</b>
+        <div class="score-team">
+          <span id="team2Label">팀2</span>
+          <strong id="team2Wins">0승</strong>
+        </div>
+      </div>
+
+      <div style="margin-top:16px">
+        <div class="progress-head">
+          <span>진행률</span>
+          <span id="progressText">0 / 0 경기</span>
+        </div>
+        <div class="progress"><div class="bar" id="progressBar"></div></div>
+      </div>
+
+      <div id="currentMatch" class="current"></div>
+    </div>
+  </section>
+
+  <section class="card hidden" id="matchesCard">
+    <h2 style="margin-top:0">전체 대진표</h2>
+    <div id="allMatches" class="match-list"></div>
+  </section>
+</main>
+
+<script>
+let db=null;
+let roomRef=null;
+
+function initFirebase(){
+  if(!firebase.apps.length)firebase.initializeApp(window.TODAYCOCK_FIREBASE_CONFIG);
+  db=firebase.database();
+}
+initFirebase();
+
+const params=new URLSearchParams(location.search);
+const initialRoom=params.get('room')||'';
+roomInput.value=initialRoom;
+
+function escapeHtml(value){
+  return String(value??'').replace(/[&<>"']/g,ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+}
+
+function sideNames(match){
+  return {
+    a:(match.team1||[]).map(p=>p.name).join(' / '),
+    b:(match.team2||[]).map(p=>p.name).join(' / ')
+  };
+}
+
+function flattenSchedule(schedule){
+  return (schedule||[]).flatMap(round=>
+    (round.matches||[]).map(match=>({...match,round:round.round}))
+  );
+}
+
+function renderRoom(data){
+  if(!data||data.active!==true){
+    viewerContent.classList.add('hidden');
+    matchesCard.classList.add('hidden');
+    viewerStatus.classList.remove('hidden');
+    viewerStatus.textContent='공유가 종료되었거나 존재하지 않는 팀전입니다.';
+    return;
+  }
+
+  const event=data.eventInfo||{};
+  const progress=data.progress||{};
+  const scoreboardData=data.scoreboard||{};
+  const flat=flattenSchedule(data.schedule);
+  const currentIndex=Math.max(0,Math.min(Number(data.currentMatchIndex||0),Math.max(flat.length-1,0)));
+  const current=flat[currentIndex];
+
+  viewerStatus.classList.add('hidden');
+  viewerContent.classList.remove('hidden');
+  matchesCard.classList.remove('hidden');
+
+  eventTitle.textContent=event.name||'오늘콕 팀전';
+  eventMeta.textContent=[event.date,data.matchType].filter(Boolean).join(' · ');
+  team1Label.textContent=event.team1||'팀1';
+  team2Label.textContent=event.team2||'팀2';
+  team1Wins.textContent=`${scoreboardData.team1Wins||0}승`;
+  team2Wins.textContent=`${scoreboardData.team2Wins||0}승`;
+
+  progressText.textContent=`${progress.completed||0} / ${progress.total||0} 경기`;
+  progressBar.style.width=`${progress.percent||0}%`;
+
+  if(current){
+    const names=sideNames(current);
+    const score=(current.score1!==''&&current.score2!=='')
+      ?`${current.score1} : ${current.score2}`
+      :'- : -';
+    currentMatch.innerHTML=`
+      <div class="meta">현재 경기 · ${escapeHtml(current.round)}라운드 · ${escapeHtml(current.court)}코트</div>
+      <div class="team">${escapeHtml(names.a)}</div>
+      <div class="score">${escapeHtml(score)}</div>
+      <div class="team">${escapeHtml(names.b)}</div>`;
+  }else{
+    currentMatch.innerHTML='<div class="meta">등록된 경기가 없습니다.</div>';
+  }
+
+  allMatches.innerHTML=(data.schedule||[]).map(round=>`
+    <div>
+      <div class="round-title">${escapeHtml(round.round)}라운드</div>
+      ${(round.matches||[]).map(match=>{
+        const names=sideNames(match);
+        const done=match.score1!==''&&match.score2!=='';
+        return `<div class="match ${done?'ended':'pending'}">
+          <div class="match-head">
+            <span>${escapeHtml(match.court)}코트</span>
+            <span>${done?'경기 완료':'예정'}</span>
+          </div>
+          <div class="match-vs">
+            <div class="side">${escapeHtml(names.a)}</div>
+            <div class="match-score">${done?`${escapeHtml(match.score1)} : ${escapeHtml(match.score2)}`:'VS'}</div>
+            <div class="side">${escapeHtml(names.b)}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function joinRoom(){
+  const room=roomInput.value.trim().toUpperCase();
+  if(!room){
+    alert('팀전 코드를 입력해주세요.');
+    return;
+  }
+  history.replaceState(null,'',`?room=${encodeURIComponent(room)}`);
+  viewerStatus.classList.remove('hidden');
+  viewerStatus.textContent='실시간 팀전 정보를 불러오는 중입니다.';
+  viewerContent.classList.add('hidden');
+  matchesCard.classList.add('hidden');
+
+  if(roomRef)roomRef.off();
+  roomRef=db.ref(`rooms/${room}`);
+
+  roomRef.on('value',snapshot=>{
+    if(!snapshot.exists()){
+      viewerStatus.classList.remove('hidden');
+      viewerStatus.textContent='해당 팀전 코드를 찾을 수 없습니다.';
+      viewerContent.classList.add('hidden');
+      matchesCard.classList.add('hidden');
+      return;
+    }
+    renderRoom(snapshot.val());
+  },error=>{
+    console.error(error);
+    viewerStatus.classList.remove('hidden');
+    viewerStatus.textContent='관람 권한이 없거나 공유가 종료된 팀전입니다.';
+    viewerContent.classList.add('hidden');
+    matchesCard.classList.add('hidden');
+  });
+}
+
+joinBtn.addEventListener('click',joinRoom);
+roomInput.addEventListener('keydown',event=>{
+  if(event.key==='Enter')joinRoom();
+});
+if(initialRoom)joinRoom();
+</script>
+</body>
+</html>
