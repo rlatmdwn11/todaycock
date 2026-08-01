@@ -1092,6 +1092,37 @@
       .live-status-grid{grid-template-columns:1fr}
     }
 
+
+    /* v4.3 file import button correction */
+    .actions label.file-button,
+    label.file-button{
+      box-sizing:border-box;
+      width:100%;
+      min-height:46px !important;
+      height:46px !important;
+      display:flex !important;
+      align-items:center;
+      justify-content:center;
+      margin:0 !important;
+      padding:0 16px !important;
+      border:1px solid var(--line) !important;
+      border-radius:14px !important;
+      background:white !important;
+      color:var(--ink) !important;
+      font-family:inherit;
+      font-size:15px !important;
+      font-weight:800;
+      line-height:1;
+      cursor:pointer;
+      box-shadow:none !important;
+      appearance:none;
+      -webkit-appearance:none;
+    }
+    .actions label.file-button:hover,
+    label.file-button:hover{
+      background:#f7fbf8 !important;
+    }
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="firebase-config.js"></script>
@@ -1109,7 +1140,7 @@
     <h1 class="v4-ko-title">오늘콕</h1>
     <div class="v4-en-title">TODAYCOCK</div>
     <div class="v4-subtitle">배드민턴 대진 매니저</div>
-    <div class="v4-version">Version 4.2</div>
+    <div class="v4-version">Version 4.3</div>
     <div class="v4-maker">Made by 김승주</div>
 
     <div class="v4-mode-buttons">
@@ -1137,7 +1168,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v4.2</h2>
+      <h2>오늘콕 v4.3</h2>
       <span class="v2-badge">Made by 김승주</span>
     </div>
 
@@ -1649,6 +1680,8 @@ function generateFixed(opts){
   return result;
 }
 function generateSchedule(){
+  scheduleMode=method.value;
+  localStorage.setItem('todaycock_schedule_mode',scheduleMode);
   const opts=settings(), pool=eligible();
   if(pool.length<4)return alert('선택한 경기 종류에 맞는 선수가 최소 4명 필요합니다.');
   if(opts.method==='interteam'&&(byTeam('팀1').length<2||byTeam('팀2').length<2))return alert('팀전은 팀1과 팀2에 각각 최소 2명이 필요합니다.');
@@ -1660,12 +1693,28 @@ function generateSchedule(){
 }
 
 
+
+
+
+let scheduleMode=localStorage.getItem('todaycock_schedule_mode')||'';
+
+function currentScheduleMode(){
+  return scheduleMode || method.value;
+}
 function isTeamBattleMode(){
-  return method.value==='fixed';
+  return currentScheduleMode()==='fixed';
 }
 function sideLabel(side){
-  if(isTeamBattleMode())return side===1?(eventInfo.team1||'팀1'):(eventInfo.team2||'팀2');
+  if(isTeamBattleMode()){
+    return side===1?(eventInfo.team1||'팀1'):(eventInfo.team2||'팀2');
+  }
   return side===1?'조 A':'조 B';
+}
+function overviewCompetitionLabel(){
+  if(isTeamBattleMode()){
+    return `${eventInfo.team1||'팀1'} vs ${eventInfo.team2||'팀2'}`;
+  }
+  return '모임 내 대진';
 }
 
 function playerOptions(selectedId, requiredTeam){
@@ -1731,7 +1780,7 @@ function renderOverview(){
   overviewArea.className='';
   overviewArea.innerHTML=`
     <div class="overview-head">
-      <div><b>${esc(eventInfo.name||'배드민턴 팀전')}</b><div class="muted">${esc(eventInfo.date||'')} · ${isTeamBattleMode()?`${esc(eventInfo.team1||'팀1')} vs ${esc(eventInfo.team2||'팀2')}`:'모임 내 대진'}</div></div>
+      <div><b>${esc(eventInfo.name||'배드민턴 팀전')}</b><div class="muted">${esc(eventInfo.date||'')} · ${esc(overviewCompetitionLabel())}</div></div>
       <div class="overview-summary">
         <span>총 ${schedule.length}라운드</span>
         <span>총 ${totalMatches}경기</span>
@@ -1749,7 +1798,7 @@ function renderOverview(){
     </div>`).join('')}</div>
     <div class="overview-wrap">
       <table class="overview-table">
-        <thead><tr><th>라운드</th><th>코트</th><th>팀1 선수</th><th>점수</th><th>팀2 선수</th></tr></thead>
+        <thead><tr><th>라운드</th><th>코트</th><th>${sideLabel(1)} 선수</th><th>점수</th><th>${sideLabel(2)} 선수</th></tr></thead>
         <tbody>${rows.map(row=>`<tr>
           ${row.showRound?`<td class="round-cell" rowspan="${row.roundSpan}">${row.round}R</td>`:''}
           <td class="court-cell">${row.court}코트</td>
@@ -1766,7 +1815,11 @@ function printOverview(){
 }
 function exportOverviewCSV(){
   if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
-  const rows=[['라운드','코트',isTeamBattleMode()?'팀1 선수1':'조A 선수1',isTeamBattleMode()?'팀1 선수2':'조A 선수2',isTeamBattleMode()?'팀1 점수':'조A 점수',isTeamBattleMode()?'팀2 선수1':'조B 선수1',isTeamBattleMode()?'팀2 선수2':'조B 선수2',isTeamBattleMode()?'팀2 점수':'조B 점수']];
+  const rows=[[
+    '라운드','코트',
+    `${sideLabel(1)} 선수1`,`${sideLabel(1)} 선수2`,`${sideLabel(1)} 점수`,
+    `${sideLabel(2)} 선수1`,`${sideLabel(2)} 선수2`,`${sideLabel(2)} 점수`
+  ]];
   schedule.forEach(r=>r.matches.forEach(m=>rows.push([
     r.round,m.court,m.team1[0].name,m.team1[1].name,m.score1,
     m.team2[0].name,m.team2[1].name,m.score2
@@ -1799,7 +1852,7 @@ function renderSchedule(){
       <h3>${r.round}라운드</h3>
       <button class="secondary small-btn no-print" onclick="addBlankMatch(${ri})">경기 추가</button>
     </div>
-    <table class="match-table desktop-schedule"><thead><tr><th>코트</th><th>팀1 선수</th><th>점수</th><th>팀2 선수</th><th>점수</th><th class="no-print">수정</th></tr></thead>
+    <table class="match-table desktop-schedule"><thead><tr><th>코트</th><th>${sideLabel(1)} 선수</th><th>점수</th><th>${sideLabel(2)} 선수</th><th>점수</th><th class="no-print">수정</th></tr></thead>
     <tbody>${r.matches.map((m,mi)=>`<tr>
       <td><input class="score" type="number" min="1" value="${m.court}" onchange="changeCourt(${ri},${mi},this.value)"></td>
       <td>
@@ -1934,7 +1987,11 @@ function showTab(name){
 }
 function exportCSV(){
   if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
-  const rows=[['라운드','코트',isTeamBattleMode()?'팀1 선수1':'조A 선수1',isTeamBattleMode()?'팀1 선수2':'조A 선수2',isTeamBattleMode()?'팀1 점수':'조A 점수',isTeamBattleMode()?'팀2 선수1':'조B 선수1',isTeamBattleMode()?'팀2 선수2':'조B 선수2',isTeamBattleMode()?'팀2 점수':'조B 점수']];
+  const rows=[[
+    '라운드','코트',
+    `${sideLabel(1)} 선수1`,`${sideLabel(1)} 선수2`,`${sideLabel(1)} 점수`,
+    `${sideLabel(2)} 선수1`,`${sideLabel(2)} 선수2`,`${sideLabel(2)} 점수`
+  ]];
   schedule.forEach(r=>r.matches.forEach(m=>rows.push([r.round,m.court,m.team1[0].name,m.team1[1].name,m.score1,m.team2[0].name,m.team2[1].name,m.score2])));
   const csv='\ufeff'+rows.map(row=>row.map(v=>`"${String(v).replaceAll('"','""')}"`).join(',')).join('\n');
   downloadBlob(csv,'오늘콕_대진표.csv','text/csv;charset=utf-8');
@@ -1948,7 +2005,9 @@ function importRoster(e){
 function downloadBlob(data,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
 function resetAll(){
   if(!confirm('명단, 설정, 대진표를 모두 지울까요?'))return;
-  localStorage.removeItem('todaycock_players');localStorage.removeItem('todaycock_schedule');localStorage.removeItem('todaycock_settings');
+  localStorage.removeItem('todaycock_players');localStorage.removeItem('todaycock_schedule');
+  localStorage.removeItem('todaycock_schedule_mode');
+  scheduleMode='';localStorage.removeItem('todaycock_settings');
   players=[];schedule=[];location.reload();
 }
 document.getElementById('playerName').addEventListener('keydown',e=>{if(e.key==='Enter')addPlayer()});
@@ -2291,7 +2350,7 @@ function saveCurrentEvent(){
     savedAt:new Date().toISOString(),
     eventInfo:JSON.parse(JSON.stringify(eventInfo)),
     players:JSON.parse(JSON.stringify(players)),
-    schedule:JSON.parse(JSON.stringify(schedule))
+    schedule:JSON.parse(JSON.stringify(schedule)),scheduleMode:currentScheduleMode()
   };
   eventHistory.unshift(snapshot);
   eventHistory=eventHistory.slice(0,30);
@@ -2322,6 +2381,8 @@ function restoreHistory(index){
   if(!confirm('현재 명단과 대진표를 이 기록으로 바꿀까요?'))return;
   players=JSON.parse(JSON.stringify(h.players));
   schedule=JSON.parse(JSON.stringify(h.schedule));
+  scheduleMode=h.scheduleMode||method.value;
+  localStorage.setItem('todaycock_schedule_mode',scheduleMode);
   eventInfo=JSON.parse(JSON.stringify(h.eventInfo||{}));
   localStorage.setItem('todaycock_players',JSON.stringify(players));
   localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));
@@ -2511,7 +2572,7 @@ function buildLivePayload(active=true){
       team1:eventInfo.team1||'팀1',
       team2:eventInfo.team2||'팀2'
     },
-    mode:method.value,
+    mode:currentScheduleMode(),
     matchType:matchType.value,
     progress:{completed,total,percent:total?Math.round(completed/total*100):0},
     scoreboard:{team1Wins,team2Wins,draws},

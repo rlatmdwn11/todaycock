@@ -125,6 +125,18 @@ function escapeHtml(value){
   }[ch]));
 }
 
+
+function isTeamBattle(data){
+  return data?.mode==='fixed';
+}
+function viewerSideLabel(data,side){
+  if(isTeamBattle(data)){
+    const event=data.eventInfo||{};
+    return side===1?(event.team1||'팀1'):(event.team2||'팀2');
+  }
+  return side===1?'조 A':'조 B';
+}
+
 function sideNames(match){
   return {
     a:(match.team1||[]).map(p=>p.name).join(' / '),
@@ -159,11 +171,16 @@ function renderRoom(data){
   matchesCard.classList.remove('hidden');
 
   eventTitle.textContent=event.name||'오늘콕 팀전';
-  eventMeta.textContent=[event.date,data.matchType].filter(Boolean).join(' · ');
-  team1Label.textContent=event.team1||'팀1';
-  team2Label.textContent=event.team2||'팀2';
+  eventMeta.textContent=[
+    event.date,
+    isTeamBattle(data)?`${viewerSideLabel(data,1)} vs ${viewerSideLabel(data,2)}`:'모임 내 대진',
+    data.matchType
+  ].filter(Boolean).join(' · ');
+  team1Label.textContent=viewerSideLabel(data,1);
+  team2Label.textContent=viewerSideLabel(data,2);
   team1Wins.textContent=`${scoreboardData.team1Wins||0}승`;
   team2Wins.textContent=`${scoreboardData.team2Wins||0}승`;
+  scoreboard.classList.toggle('hidden',!isTeamBattle(data));
 
   progressText.textContent=`${progress.completed||0} / ${progress.total||0} 경기`;
   progressBar.style.width=`${progress.percent||0}%`;
