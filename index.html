@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#1f7a4d" />
   <title>오늘콕 - 배드민턴 복식 대진표</title>
   <link rel="manifest" href="manifest.json" />
@@ -323,6 +323,115 @@
       input,select{font-size:15px}
     }
 
+
+    /* v2.2 iPhone layout fix */
+    html,body{
+      width:100%;
+      max-width:100%;
+      overflow-x:hidden;
+    }
+    body *{
+      min-width:0;
+    }
+    .home-panel,
+    main,
+    .grid,
+    .card,
+    .home-card,
+    .event-info-grid,
+    .row,
+    .row3,
+    .player-form{
+      width:100%;
+      max-width:100%;
+    }
+    .event-info-grid > div,
+    .row > div,
+    .row3 > div,
+    .player-form > div{
+      min-width:0;
+      width:100%;
+    }
+    input,
+    select,
+    textarea{
+      width:100%;
+      max-width:100%;
+      min-width:0;
+      box-sizing:border-box;
+    }
+    /* iOS date input ignores normal width/padding in some cases */
+    input[type="date"]{
+      display:block;
+      width:100%;
+      max-width:100%;
+      min-width:0;
+      -webkit-appearance:none;
+      appearance:none;
+      box-sizing:border-box;
+      padding-left:14px;
+      padding-right:10px;
+    }
+    input[type="date"]::-webkit-date-and-time-value{
+      text-align:center;
+      min-width:0;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator{
+      margin:0;
+      padding:0;
+    }
+    /* Only the overview table may scroll horizontally */
+    .overview-wrap{
+      display:block;
+      width:100%;
+      max-width:100%;
+      overflow-x:auto;
+      overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior-x:contain;
+    }
+    .overview-table{
+      width:max-content;
+      min-width:760px;
+      max-width:none;
+    }
+    #overviewTab,
+    #overviewArea,
+    #resultCard,
+    #scheduleTab,
+    #statsTab{
+      width:100%;
+      max-width:100%;
+      min-width:0;
+      overflow-x:hidden;
+    }
+    .match-table{
+      max-width:100%;
+    }
+    @media(max-width:760px){
+      .event-info-grid{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      }
+      .row,
+      .row3{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      }
+      .menu-grid{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      }
+      .actions{
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      }
+    }
+    @media(max-width:390px){
+      .event-info-grid{
+        grid-template-columns:1fr;
+      }
+      .event-info-grid > div{
+        grid-column:1/-1;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -343,7 +452,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v2.1</h2>
+      <h2>오늘콕 v2.2</h2>
       <span class="v2-badge">Made by 김승주 · 안산시</span>
     </div>
 
