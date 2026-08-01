@@ -20,7 +20,7 @@
         <h1>오늘콕</h1>
         <p class="brand-en">TODAYCOCK</p>
         <p class="brand-sub">배드민턴 대진 매니저</p>
-        <p class="brand-meta">Version 2.0 Final · Fix 4 · Made by 김승주</p>
+        <p class="brand-meta">Version 2.0 Stable · Fix 5 · Made by 김승주</p>
         <div class="mode-buttons">
           <button class="btn primary" id="openAdminBtn">운영자 모드</button>
           <button class="btn secondary" id="openViewerBtn">관람 모드</button>
@@ -71,11 +71,20 @@
       </header>
 
 
+      
+      <div class="save-status-bar">
+        <span id="autoSaveStatus">● 자동 저장 준비</span>
+        <span id="lastSavedTime"></span>
+      </div>
+
       <div class="operator-toolbar">
         <button class="tool-btn" id="undoBtn">↩ 실행취소</button>
         <button class="tool-btn" id="toggleLockBtn">🔓 대진 잠금</button>
         <button class="tool-btn" id="saveRecordBtn">💾 기록 저장</button>
         <button class="tool-btn" id="printResultBtn">📄 결과 출력</button>
+        <button class="tool-btn" id="exportBackupBtn">⬇ 백업 저장</button>
+        <button class="tool-btn" id="importBackupBtn">⬆ 백업 불러오기</button>
+        <input id="backupFileInput" type="file" accept=".json,application/json" hidden>
       </div>
 
       <div class="content-stack">
@@ -378,6 +387,19 @@
         <button class="icon-btn" id="closeRecordBtn">×</button>
       </div>
       <div id="recordModalContent"></div>
+    </div>
+  </div>
+
+
+  <div class="modal-backdrop" id="recoveryModal" aria-hidden="true">
+    <div class="modal">
+      <h3>이전 경기 이어서 진행</h3>
+      <p id="recoverySummary" class="help"></p>
+      <div class="modal-actions recovery-actions">
+        <button class="btn danger" id="startFreshBtn">새로 시작</button>
+        <button class="btn primary" id="continueGameBtn">이어서 진행</button>
+      </div>
+      <p class="help">새로 시작을 누르면 현재 기기에 자동 저장된 진행 중 데이터가 초기화됩니다. 지난 기록은 유지됩니다.</p>
     </div>
   </div>
 

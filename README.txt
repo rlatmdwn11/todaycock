@@ -1,19 +1,20 @@
-TODAYCOCK Version 2.0 Final Mobile · Fix 4
+TODAYCOCK Version 2.0 Stable · Fix 5
 
-아이콘 수정
-- icon-192.png 추가
-- icon-512.png 추가
-- apple-touch-icon.png 추가
-- manifest.json 아이콘 정보 추가
-- iPhone 홈 화면 아이콘 연결 추가
-- 아이콘 캐시 방지를 위한 버전 주소 추가
+안정화 기능
+- 선수 명단, 경기 설정, 고정 파트너, 대진표, 점수, 현재 라운드를 자동 저장
+- 앱을 닫거나 다른 앱으로 이동할 때 즉시 한 번 더 저장
+- 다시 실행하면 이전 경기 이어서 진행 안내
+- 자동 저장 상태와 마지막 저장 시간 표시
+- JSON 백업 파일 저장
+- JSON 백업 파일 불러오기
+- 기존 Alpha/Final 버전의 로컬 저장 데이터를 자동 이전
 
-적용 방법
-1. ZIP 안의 모든 파일을 GitHub 저장소 최상위에 덮어쓰기
-2. Commit changes
-3. 기존 홈 화면의 오늘콕 앱을 삭제
-4. Safari에서 GitHub Pages 주소 뒤에 ?iconfix4 를 붙여 접속
-5. 공유 버튼 → 홈 화면에 추가
+주의
+- Safari 방문 기록 및 웹사이트 데이터를 직접 삭제하면 기기 자동 저장 데이터도 삭제됩니다.
+- 시크릿 브라우징에서는 저장이 유지되지 않을 수 있습니다.
+- 중요한 교류전은 운영자 도구의 '백업 저장'을 한 번 눌러 JSON 파일도 보관하세요.
 
-중요:
-기존 홈 화면 아이콘은 자동으로 바뀌지 않으므로 반드시 삭제 후 다시 추가해야 합니다.
+업로드
+- ZIP 안의 파일을 GitHub 저장소 최상위에 모두 덮어쓰기
+- Commit changes
+- 최초 접속: GitHub Pages 주소 뒤에 ?stablefix5 추가

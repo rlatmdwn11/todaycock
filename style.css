@@ -221,3 +221,20 @@ html,body{max-width:100%;overflow-x:hidden}
   .match-sides{grid-template-columns:1fr}.match-sides>b{padding:3px}.score-inputs{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
   .section-head{align-items:flex-start;flex-wrap:wrap}.round-nav{width:100%;display:grid;grid-template-columns:1fr auto auto}.round-nav .small-btn{width:100%}
 }
+
+
+/* Stable Fix 5: autosave and recovery */
+.save-status-bar{
+  max-width:980px;margin:0 auto 8px;padding:9px 12px;border:1px solid var(--line);
+  border-radius:13px;background:#fff;display:flex;justify-content:space-between;gap:10px;
+  color:var(--muted);font-size:12px;font-weight:800
+}
+#autoSaveStatus.saving{color:var(--warning)}
+#autoSaveStatus.saved{color:var(--primary)}
+#autoSaveStatus.error{color:var(--danger)}
+.operator-toolbar{grid-template-columns:repeat(3,1fr)}
+.recovery-actions{grid-template-columns:1fr 1fr}
+@media(max-width:760px){
+  .save-status-bar{align-items:flex-start;flex-direction:column}
+  .operator-toolbar{grid-template-columns:1fr 1fr}
+}

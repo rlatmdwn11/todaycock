@@ -4,7 +4,9 @@ const DEFAULT_ADMIN_CODE='1111';
 const SETTINGS_PASSWORD='todaycock01';
 const ADMIN_CODE_KEY='todaycock2_admin_code';
 const NICKNAME_KEY='todaycock2_nickname';
-const APP_STATE_KEY='todaycock2_alpha2_state';
+const APP_STATE_KEY='todaycock2_stable_state_v1';
+const LEGACY_STATE_KEYS=['todaycock2_alpha2_state','todaycock2_state'];
+const SAVE_META_KEY='todaycock2_stable_save_meta';
 
 const $=(id)=>document.getElementById(id);
 const state={
@@ -24,8 +26,89 @@ function uid(){return `p_${Date.now()}_${Math.random().toString(36).slice(2,7)}`
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');window.scrollTo({top:0,behavior:'instant'})}
 function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(window.__toastTimer);window.__toastTimer=setTimeout(()=>el.classList.remove('show'),2200)}
 function getAdminCode(){return localStorage.getItem(ADMIN_CODE_KEY)||DEFAULT_ADMIN_CODE}
-function saveState(){localStorage.setItem(APP_STATE_KEY,JSON.stringify(state))}
-function loadState(){try{const saved=JSON.parse(localStorage.getItem(APP_STATE_KEY)||'null');if(saved)Object.assign(state,saved)}catch(e){console.warn(e)}}
+let saveTimer=null;
+
+function setSaveStatus(status,message){
+  const statusEl=document.getElementById('autoSaveStatus');
+  const timeEl=document.getElementById('lastSavedTime');
+  if(!statusEl)return;
+  statusEl.classList.remove('saving','saved','error');
+  statusEl.classList.add(status);
+  statusEl.textContent=message;
+  if(timeEl&&status==='saved'){
+    const now=new Date();
+    timeEl.textContent=`마지막 저장 ${now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+  }
+}
+
+function sanitizeLoadedState(saved){
+  if(!saved||typeof saved!=='object')return null;
+  return {
+    players:Array.isArray(saved.players)?saved.players:[],
+    schedule:Array.isArray(saved.schedule)?saved.schedule:[],
+    currentRoundIndex:Number.isInteger(saved.currentRoundIndex)?saved.currentRoundIndex:0,
+    filter:saved.filter||'all',
+    fixedPairs:saved.fixedPairs&&typeof saved.fixedPairs==='object'
+      ? saved.fixedPairs:{team1:[],team2:[]},
+    settings:{
+      ...state.settings,
+      ...(saved.settings&&typeof saved.settings==='object'?saved.settings:{})
+    }
+  };
+}
+
+function persistStateNow(){
+  try{
+    setSaveStatus('saving','● 저장 중');
+    const payload={
+      version:1,
+      savedAt:new Date().toISOString(),
+      state:state
+    };
+    localStorage.setItem(APP_STATE_KEY,JSON.stringify(payload));
+    localStorage.setItem(SAVE_META_KEY,payload.savedAt);
+    setSaveStatus('saved','● 자동 저장됨');
+    return true;
+  }catch(error){
+    console.error('TODAYCOCK save failed',error);
+    setSaveStatus('error','● 저장 실패');
+    return false;
+  }
+}
+
+function saveState(){
+  clearTimeout(saveTimer);
+  setSaveStatus('saving','● 저장 중');
+  saveTimer=setTimeout(persistStateNow,120);
+}
+
+function loadState(){
+  let raw=null;
+  try{
+    raw=localStorage.getItem(APP_STATE_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      const loaded=sanitizeLoadedState(parsed.state||parsed);
+      if(loaded)Object.assign(state,loaded);
+      return;
+    }
+
+    for(const key of LEGACY_STATE_KEYS){
+      const legacyRaw=localStorage.getItem(key);
+      if(!legacyRaw)continue;
+      const legacy=JSON.parse(legacyRaw);
+      const loaded=sanitizeLoadedState(legacy.state||legacy);
+      if(loaded){
+        Object.assign(state,loaded);
+        persistStateNow();
+        break;
+      }
+    }
+  }catch(error){
+    console.error('TODAYCOCK load failed',error);
+    setSaveStatus('error','● 저장 데이터 읽기 실패');
+  }
+}
 
 $('openAdminBtn').addEventListener('click',()=>{$('adminCode').value='';$('nickname').value=localStorage.getItem(NICKNAME_KEY)||'';$('adminError').textContent='';showScreen('adminLoginScreen')});
 $('openViewerBtn').addEventListener('click',()=>{$('roomCode').value='';$('viewerError').textContent='';showScreen('viewerCodeScreen')});
@@ -830,3 +913,117 @@ renderStats=function(){
 restoreUndoStack();
 renderFinalResult();
 renderRecords();
+
+
+// ===== Stable Fix 5: recovery and portable backup =====
+function hasRecoverableGame(){
+  return state.players.length>0 || state.schedule.length>0;
+}
+
+function recoveryDescription(){
+  const matches=state.schedule.reduce((sum,round)=>sum+(round.matches?.length||0),0);
+  const completed=state.schedule.reduce(
+    (sum,round)=>sum+(round.matches||[]).filter(match=>match.score1!==''&&match.score2!=='').length,
+    0
+  );
+  const savedAt=localStorage.getItem(SAVE_META_KEY);
+  const savedText=savedAt?new Date(savedAt).toLocaleString('ko-KR'):'저장 시간 미확인';
+  return `선수 ${state.players.length}명 · 대진 ${matches}경기 · 완료 ${completed}경기\n${savedText}`;
+}
+
+function showRecoveryModalIfNeeded(){
+  if(!hasRecoverableGame())return;
+  const modal=document.getElementById('recoveryModal');
+  const summary=document.getElementById('recoverySummary');
+  if(summary)summary.textContent=recoveryDescription();
+  modal?.classList.add('open');
+}
+
+document.getElementById('continueGameBtn')?.addEventListener('click',()=>{
+  document.getElementById('recoveryModal')?.classList.remove('open');
+  renderAll();
+  toast('이전 경기 상태를 복구했습니다.');
+});
+
+document.getElementById('startFreshBtn')?.addEventListener('click',()=>{
+  if(!confirm('현재 진행 중인 명단과 대진을 초기화할까요?'))return;
+  state.players=[];
+  state.schedule=[];
+  state.currentRoundIndex=0;
+  state.filter='all';
+  state.fixedPairs={team1:[],team2:[]};
+  localStorage.removeItem(APP_STATE_KEY);
+  localStorage.removeItem(SAVE_META_KEY);
+  document.getElementById('recoveryModal')?.classList.remove('open');
+  renderAll();
+  persistStateNow();
+  toast('새 경기로 초기화했습니다.');
+});
+
+function downloadBackup(){
+  persistStateNow();
+  const backup={
+    app:'TODAYCOCK',
+    version:'2.0-stable-fix5',
+    exportedAt:new Date().toISOString(),
+    state:JSON.parse(JSON.stringify(state)),
+    records:getRecords()
+  };
+  const text=JSON.stringify(backup,null,2);
+  const blob=new Blob([text],{type:'application/json;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toISOString().slice(0,10);
+  a.href=url;
+  a.download=`오늘콕_백업_${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  toast('백업 파일을 저장했습니다.');
+}
+
+document.getElementById('exportBackupBtn')?.addEventListener('click',downloadBackup);
+document.getElementById('importBackupBtn')?.addEventListener('click',()=>{
+  document.getElementById('backupFileInput')?.click();
+});
+
+document.getElementById('backupFileInput')?.addEventListener('change',async(event)=>{
+  const file=event.target.files?.[0];
+  event.target.value='';
+  if(!file)return;
+  try{
+    const text=await file.text();
+    const backup=JSON.parse(text);
+    if(backup.app!=='TODAYCOCK'||!backup.state)throw new Error('INVALID_BACKUP');
+    if(!confirm('현재 진행 중인 내용을 백업 파일로 교체할까요?'))return;
+    const loaded=sanitizeLoadedState(backup.state);
+    if(!loaded)throw new Error('INVALID_STATE');
+    Object.assign(state,loaded);
+    if(Array.isArray(backup.records))saveRecords(backup.records);
+    persistStateNow();
+    renderAll();
+    toast('백업을 복구했습니다.');
+  }catch(error){
+    console.error(error);
+    alert('오늘콕 백업 파일을 읽지 못했습니다.');
+  }
+});
+
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden')persistStateNow();
+});
+window.addEventListener('pagehide',persistStateNow);
+window.addEventListener('beforeunload',persistStateNow);
+
+setTimeout(()=>{
+  const savedAt=localStorage.getItem(SAVE_META_KEY);
+  if(savedAt){
+    const el=document.getElementById('lastSavedTime');
+    if(el)el.textContent=`마지막 저장 ${new Date(savedAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`;
+    setSaveStatus('saved','● 자동 저장됨');
+  }else{
+    setSaveStatus('saved','● 자동 저장 준비');
+  }
+  showRecoveryModalIfNeeded();
+},250);
