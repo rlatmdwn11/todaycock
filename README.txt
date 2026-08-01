@@ -1,17 +1,15 @@
-TODAYCOCK Version 2.0 Final Mobile
+TODAYCOCK Version 2.0 Final Mobile · Fix 1
 
-아이폰 GitHub 웹 업로드용 단일 폴더 구조입니다.
+수정 내용
+- 초기화면 버튼이 눌리지 않던 JavaScript 오류 수정
+- app.js와 schedule.js 첫 줄의 잘못된 문자 제거
+- 아이폰에 이전 오류 파일이 남지 않도록 캐시 버전 변경
 
 업로드 방법
-1. 이 ZIP을 압축 해제합니다.
-2. 안의 파일을 모두 선택합니다.
-3. GitHub 저장소 최상위에 업로드합니다.
-4. 기존 파일은 덮어쓰고 Commit changes를 누릅니다.
-
-중요
-- ZIP 파일 자체가 아니라 압축을 푼 안의 파일 전부를 올리세요.
-- index.html이 저장소 최상위에 보여야 합니다.
-- app.js, firebase.js, schedule.js, style.css도 모두 index.html과 같은 위치에 있어야 합니다.
+1. 기존 GitHub 파일을 삭제할 필요 없이 이 ZIP 안의 파일을 전부 덮어씁니다.
+2. Commit changes를 누릅니다.
+3. 배포 후 Safari에서 페이지를 완전히 닫았다가 다시 엽니다.
+4. 홈 화면에 설치한 앱이라면 앱을 삭제 후 다시 홈 화면에 추가하는 것이 가장 확실합니다.
 
 기본 운영자 코드: 1111
 설정 비밀번호: todaycock01

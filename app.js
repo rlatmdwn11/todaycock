@@ -1,4 +1,3 @@
-\
 'use strict';
 
 const DEFAULT_ADMIN_CODE='1111';

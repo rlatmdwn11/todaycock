@@ -1,4 +1,4 @@
-const CACHE_NAME='todaycock2-final-mobile-v20';
+const CACHE_NAME='todaycock2-final-mobile-v20-fix1';
 const ASSETS=[
   './','./index.html','./viewer.html','./firebase-config.js',
   './style.css','./app.js','./schedule.js','./firebase.js','./manifest.json'
