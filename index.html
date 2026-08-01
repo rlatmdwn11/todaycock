@@ -853,7 +853,107 @@
       }
     }
 
+
+    /* v3.0 feature set */
+    .roster-tools{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:12px;
+    }
+    .compact-check{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin:0 0 8px;
+    }
+    .compact-check .form-check-input{
+      width:18px !important;
+      height:18px !important;
+      min-width:18px !important;
+      min-height:18px !important;
+      flex:0 0 18px;
+      margin:0;
+      -webkit-appearance:checkbox;
+      appearance:auto;
+    }
+    .compact-check .form-check-label{margin:0;font-size:13px;font-weight:800}
+    .target-option-wrap{display:flex;flex-direction:column;justify-content:flex-end}
+    .estimate-panel{
+      margin-top:16px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#f7fbf8;
+    }
+    .estimate-title{font-weight:900;color:var(--green);margin-bottom:10px}
+    .estimate-grid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+    }
+    .estimate-grid > div{
+      padding:10px;
+      border-radius:12px;
+      background:white;
+      border:1px solid var(--line);
+      text-align:center;
+    }
+    .estimate-grid span{display:block;font-size:11px;color:#718078}
+    .estimate-grid strong{display:block;margin-top:3px;font-size:15px}
+    .estimate-advice{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#fffaf0;
+      font-size:13px;
+      line-height:1.45;
+    }
+    .current-match-panel{
+      margin-bottom:14px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#fff;
+    }
+    .current-match-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+      color:var(--green);
+    }
+    .current-match-card{
+      text-align:center;
+      padding:10px;
+      border-radius:14px;
+      background:#f7fbf8;
+    }
+    .current-match-meta{font-size:13px;color:#6d7b73;margin-bottom:8px}
+    .current-match-team{font-size:18px;font-weight:900;padding:8px}
+    .current-match-vs{font-size:13px;color:#718078;font-weight:800}
+    .current-match-score{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      gap:8px;
+      align-items:center;
+      margin-top:10px;
+    }
+    .current-match-score input{text-align:center}
+    .current-match-actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin-top:10px;
+    }
+    @media(max-width:760px){
+      .roster-tools{grid-template-columns:1fr}
+      .estimate-grid{grid-template-columns:1fr 1fr}
+    }
+
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <header>
@@ -873,7 +973,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v2.6</h2>
+      <h2>오늘콕 v3.0</h2>
       <span class="v2-badge">Made by 김승주 · 안산시</span>
     </div>
 
@@ -954,7 +1054,7 @@
     <section class="card" id="setupCard">
       <h2>경기 설정</h2>
       <div class="row">
-        <div><label>경기 종류</label><select id="matchType"><option>여복</option><option>남복</option><option>혼복</option></select></div>
+        <div><label>경기 종류</label><select id="matchType" onchange="updateEstimate()"><option>여복</option><option>남복</option><option>혼복</option></select></div>
         <div><label>대진 방식</label><select id="method" onchange="toggleFixedPartnerBox()">
           <option value="interteam" selected>팀1 vs 팀2 팀전</option>
           <option value="balanced">모임 내 균형 순환</option>
@@ -963,13 +1063,19 @@
         </select></div>
       </div>
       <div class="row3">
-        <div><label>라운드 수</label><input id="rounds" type="number" min="1" max="30" value="5"></div>
-        <div><label>코트 수</label><input id="courts" type="number" min="1" max="20" value="6"></div>
-        <div><label>목표 경기 수</label><input id="targetGames" type="number" min="1" max="200" value="15"></div>
+        <div><label>라운드 수</label><input id="rounds" onchange="updateEstimate()" type="number" min="1" max="30" value="5"></div>
+        <div><label>코트 수</label><input id="courts" onchange="updateEstimate()" type="number" min="1" max="20" value="6"></div>
+        <div class="target-option-wrap">
+          <label class="form-check compact-check">
+            <input class="form-check-input" id="useTargetGames" type="checkbox" onchange="toggleTargetGames()">
+            <span class="form-check-label">목표 경기수 직접 지정</span>
+          </label>
+          <input id="targetGames" onchange="updateEstimate()" type="number" min="1" max="200" value="15" disabled>
+        </div>
       </div>
       <div class="row">
-        <div><label>급수 섞기</label><select id="gradeRule"><option value="balance">급수 균형 우선</option><option value="random">급수 무관</option></select></div>
-        <div><label>같은 파트너 반복</label><select id="repeatRule"><option value="avoid">최대한 피하기</option><option value="allow">허용</option></select></div>
+        <div><label>급수 섞기</label><select id="gradeRule" onchange="updateEstimate()"><option value="balance">급수 균형 우선</option><option value="random">급수 무관</option></select></div>
+        <div><label>같은 파트너 반복</label><select id="repeatRule" onchange="updateEstimate()"><option value="avoid">최대한 피하기</option><option value="allow">허용</option></select></div>
       </div>
 
       <div id="fixedPartnerBox" class="fixed-partner-box hidden">
@@ -983,8 +1089,21 @@
         <div id="fixedPartnerList"></div>
       </div>
 
+
+      <div id="estimatePanel" class="estimate-panel">
+        <div class="estimate-title">예상 생성 결과</div>
+        <div class="estimate-grid">
+          <div><span>참가 선수</span><strong id="estimatePlayers">0명</strong></div>
+          <div><span>예상 경기</span><strong id="estimateGames">0경기</strong></div>
+          <div><span>선수당 평균</span><strong id="estimateAverage">0경기</strong></div>
+          <div><span>공평도</span><strong id="estimateFairness">-</strong></div>
+        </div>
+        <div id="estimateAdvice" class="estimate-advice">명단과 설정을 입력하면 예상 결과를 알려드려요.</div>
+      </div>
+
       <div class="actions">
         <button class="primary" onclick="generateSchedule()">대진표 만들기</button>
+        <button class="secondary" onclick="rerollSchedule()">같은 조건 다시 뽑기</button>
         <button class="secondary" onclick="saveSettings()">설정 저장</button>
         <button class="ghost" onclick="resetAll()">전체 초기화</button>
       </div>
@@ -1002,8 +1121,25 @@
       </div>
       <div class="actions">
         <button class="secondary" onclick="addSample()">가상 명단 넣기</button>
-        <button class="ghost" onclick="exportRoster()">명단 내보내기</button>
-        <label class="ghost" style="padding:10px 14px;cursor:pointer">명단 불러오기<input type="file" accept=".json" onchange="importRoster(event)" style="display:none"></label>
+        <button class="ghost" onclick="exportRosterExcel()">엑셀 내보내기</button>
+        <button class="ghost" onclick="downloadRosterTemplate()">엑셀 양식 받기</button>
+        <label class="ghost" style="padding:10px 14px;cursor:pointer">엑셀/CSV 불러오기<input type="file" accept=".xlsx,.xls,.csv,.json" onchange="importRosterFile(event)" style="display:none"></label>
+      </div>
+
+
+      <div class="roster-tools">
+        <div>
+          <label>이름 검색</label>
+          <input id="rosterSearch" placeholder="선수 이름 검색" oninput="renderPlayers()">
+        </div>
+        <div>
+          <label>명단 정렬</label>
+          <select id="rosterSort" onchange="renderPlayers()">
+            <option value="name">이름순</option>
+            <option value="grade">급수순</option>
+            <option value="team">팀순</option>
+          </select>
+        </div>
       </div>
 
       <div class="roster-toolbar">
@@ -1026,6 +1162,19 @@
         <button class="tab" data-tab="stats" onclick="showTab('stats')">참가 통계</button>
       </div>
       <div id="scheduleTab">
+
+        <div id="currentMatchPanel" class="current-match-panel hidden">
+          <div class="current-match-head">
+            <strong>현재 경기</strong>
+            <span id="currentMatchPosition">1 / 1</span>
+          </div>
+          <div id="currentMatchContent"></div>
+          <div class="current-match-actions no-print">
+            <button class="ghost" onclick="moveCurrentMatch(-1)">이전 경기</button>
+            <button class="secondary" onclick="moveCurrentMatch(1)">다음 경기</button>
+          </div>
+        </div>
+
         <div id="matchProgress" class="progress-panel hidden">
           <div class="progress-head">
             <strong>🏸 팀전 진행률</strong>
@@ -1074,22 +1223,29 @@ function renderPlayers(){
   const box=document.getElementById('playerList');
   playerSummary.innerHTML=`<span>전체 ${players.length}명</span><span>팀1 ${players.filter(p=>(p.team||'팀1')==='팀1').length}명</span><span>팀2 ${players.filter(p=>p.team==='팀2').length}명</span><span>여 ${players.filter(p=>p.gender==='여').length}명</span><span>남 ${players.filter(p=>p.gender==='남').length}명</span>`;
 
-  const visible=rosterFilter==='all'
-    ? players
-    : players.filter(p=>(p.team||'팀1')===rosterFilter);
+  let visible=rosterFilter==='all'?players:players.filter(p=>(p.team||'팀1')===rosterFilter);
+  const query=(document.getElementById('rosterSearch')?.value||'').trim().toLowerCase();
+  if(query)visible=visible.filter(p=>p.name.toLowerCase().includes(query));
+
+  const sort=document.getElementById('rosterSort')?.value||'name';
+  const gradeOrder={S:0,A:1,B:2,C:3,D:4};
+  visible=[...visible].sort((a,b)=>{
+    if(sort==='grade')return (gradeOrder[a.grade]??9)-(gradeOrder[b.grade]??9)||a.name.localeCompare(b.name);
+    if(sort==='team')return (a.team||'팀1').localeCompare(b.team||'팀1')||a.name.localeCompare(b.name);
+    return a.name.localeCompare(b.name);
+  });
 
   if(!visible.length){
     box.innerHTML='<div class="empty">표시할 선수가 없습니다.</div>';
     renderFixedPartnerList();
+    updateEstimate();
     return;
   }
 
   box.innerHTML=visible.map(p=>`
     <div class="player">
       <div class="player-main-row">
-        <div class="player-name-wrap">
-          <b>${esc(p.name)}</b>
-        </div>
+        <div class="player-name-wrap"><b>${esc(p.name)}</b></div>
         <button class="danger player-delete-btn" onclick="removePlayer('${p.id}')">삭제</button>
       </div>
       <div class="player-badges">
@@ -1101,6 +1257,7 @@ function renderPlayers(){
   `).join('');
 
   renderFixedPartnerList();
+  updateEstimate();
 }
 function addSample(){
   if(players.length && !confirm('현재 명단 뒤에 가상 명단을 추가할까요?'))return;
@@ -1111,7 +1268,23 @@ function addSample(){
   savePlayers();
 }
 function settings(){
-  return {matchType:matchType.value,method:method.value,rounds:+rounds.value,courts:+courts.value,targetGames:+targetGames.value,gradeRule:gradeRule.value,repeatRule:repeatRule.value}
+  const e=estimateScheduleRaw();
+  return {
+    matchType:matchType.value,
+    method:method.value,
+    rounds:+rounds.value,
+    courts:+courts.value,
+    targetGames:useTargetGames.checked?(+targetGames.value||1):e.possible,
+    gradeRule:gradeRule.value,
+    repeatRule:repeatRule.value
+  };
+}
+function estimateScheduleRaw(){
+  const t=matchType.value;
+  let pool=t==='여복'?players.filter(p=>p.gender==='여'):t==='남복'?players.filter(p=>p.gender==='남'):players;
+  const r=Math.max(1,+rounds.value||1),c=Math.max(1,+courts.value||1);
+  const perRound=Math.floor(pool.length/4);
+  return {possible:Math.max(0,Math.min(r*c,r*perRound))};
 }
 function saveSettings(){localStorage.setItem('todaycock_settings',JSON.stringify(settings()));alert('설정을 이 기기에 저장했어요.')}
 function loadSettings(){
@@ -1440,6 +1613,7 @@ function renderSchedule(){
   renderStats();
   renderOverview();
   renderProgress();
+  renderCurrentMatch();
 }
 function setScore(ri,mi,team,val){
   schedule[ri].matches[mi]['score'+team]=val;
@@ -1447,6 +1621,7 @@ function setScore(ri,mi,team,val){
   renderStats();
   renderOverview();
   renderProgress();
+  renderCurrentMatch();
 }
 function renderStats(){
   const stats={};
@@ -1525,6 +1700,162 @@ function resetAll(){
 }
 document.getElementById('playerName').addEventListener('keydown',e=>{if(e.key==='Enter')addPlayer()});
 
+
+
+let currentMatchIndex=0;
+let lastGenerationSettings=null;
+
+function toggleTargetGames(){
+  targetGames.disabled=!useTargetGames.checked;
+  updateEstimate();
+}
+function estimateSchedule(){
+  const pool=eligible();
+  const opts=settings();
+  const roundsCount=Math.max(1,opts.rounds||1);
+  const courtsCount=Math.max(1,opts.courts||1);
+  const maxByRounds=roundsCount*courtsCount;
+  const maxPerRound=Math.floor(pool.length/4);
+  const possible=Math.max(0,Math.min(maxByRounds,roundsCount*maxPerRound));
+  const target=useTargetGames.checked?Math.max(1,+targetGames.value||1):possible;
+  const games=Math.min(target,possible);
+  const avg=pool.length?((games*4)/pool.length):0;
+  return {players:pool.length,games,avg,possible};
+}
+function updateEstimate(){
+  const e=estimateSchedule();
+  estimatePlayers.textContent=`${e.players}명`;
+  estimateGames.textContent=`${e.games}경기`;
+  estimateAverage.textContent=`${e.avg.toFixed(1)}경기`;
+  let fairness='-';
+  if(e.players>=4){
+    const fraction=Math.abs(e.avg-Math.round(e.avg));
+    fairness=fraction<0.12?'매우 공평':fraction<0.3?'공평':'보통';
+  }
+  estimateFairness.textContent=fairness;
+  let advice='명단과 설정을 입력하면 예상 결과를 알려드려요.';
+  if(e.players<4)advice='선택한 종목에 맞는 선수가 최소 4명 필요해요.';
+  else if(e.games===0)advice='현재 라운드·코트 설정으로 만들 수 있는 경기가 없어요.';
+  else if(e.avg<1)advice='선수당 경기 수가 적어요. 라운드 수를 늘리는 걸 추천해요.';
+  else if(fairness==='보통')advice='선수별 경기 수 차이가 날 수 있어요. 라운드 수나 목표 경기수를 조정해보세요.';
+  else advice=`현재 설정이면 약 ${e.games}경기, 선수당 평균 ${e.avg.toFixed(1)}경기로 예상돼요.`;
+  estimateAdvice.textContent=advice;
+}
+function rerollSchedule(){
+  if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
+  generateSchedule();
+}
+function renderCurrentMatch(){
+  const panel=document.getElementById('currentMatchPanel');
+  if(!panel)return;
+  const flat=schedule.flatMap((r,ri)=>r.matches.map((m,mi)=>({r,ri,m,mi})));
+  if(!flat.length){
+    panel.classList.add('hidden');
+    return;
+  }
+  currentMatchIndex=Math.max(0,Math.min(currentMatchIndex,flat.length-1));
+  const item=flat[currentMatchIndex];
+  panel.classList.remove('hidden');
+  currentMatchPosition.textContent=`${currentMatchIndex+1} / ${flat.length}`;
+  currentMatchContent.innerHTML=`
+    <div class="current-match-card">
+      <div class="current-match-meta">${item.r.round}라운드 · ${item.m.court}코트</div>
+      <div class="current-match-team">${esc(item.m.team1[0].name)} / ${esc(item.m.team1[1].name)}</div>
+      <div class="current-match-vs">VS</div>
+      <div class="current-match-team">${esc(item.m.team2[0].name)} / ${esc(item.m.team2[1].name)}</div>
+      <div class="current-match-score">
+        <input type="number" value="${item.m.score1}" placeholder="팀1" onchange="setScore(${item.ri},${item.mi},1,this.value);renderCurrentMatch()">
+        <b>:</b>
+        <input type="number" value="${item.m.score2}" placeholder="팀2" onchange="setScore(${item.ri},${item.mi},2,this.value);renderCurrentMatch()">
+      </div>
+    </div>`;
+}
+function moveCurrentMatch(delta){
+  const total=schedule.reduce((s,r)=>s+r.matches.length,0);
+  if(!total)return;
+  currentMatchIndex=(currentMatchIndex+delta+total)%total;
+  renderCurrentMatch();
+}
+
+function normalizeGender(v){
+  const s=String(v||'').trim();
+  if(['여','여자','여성','F','f','female','Female'].includes(s))return '여';
+  if(['남','남자','남성','M','m','male','Male'].includes(s))return '남';
+  return '여';
+}
+function normalizeGrade(v){
+  const g=String(v||'D').trim().toUpperCase();
+  return ['S','A','B','C','D'].includes(g)?g:'D';
+}
+function normalizeTeam(v){
+  const s=String(v||'팀1').trim().replace(/\s/g,'');
+  if(['2','팀2','B','b','Team2','team2'].includes(s))return '팀2';
+  return '팀1';
+}
+function rowsToPlayers(rows){
+  return rows.map((row,i)=>{
+    const name=row['이름']??row['성명']??row['name']??row['Name'];
+    if(!name||!String(name).trim())return null;
+    return {
+      id:uid(),
+      name:String(name).trim(),
+      gender:normalizeGender(row['성별']??row['gender']??row['Gender']),
+      grade:normalizeGrade(row['급수']??row['grade']??row['Grade']),
+      team:normalizeTeam(row['팀']??row['소속팀']??row['team']??row['Team'])
+    };
+  }).filter(Boolean);
+}
+function importRosterFile(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      let imported=[];
+      if(file.name.toLowerCase().endsWith('.json')){
+        const data=JSON.parse(reader.result);
+        imported=Array.isArray(data)?data.map(p=>({
+          id:uid(),name:String(p.name||'').trim(),gender:normalizeGender(p.gender),
+          grade:normalizeGrade(p.grade),team:normalizeTeam(p.team)
+        })).filter(p=>p.name):[];
+      }else{
+        const wb=XLSX.read(reader.result,{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+        imported=rowsToPlayers(rows);
+      }
+      if(!imported.length)throw new Error('읽을 수 있는 선수가 없습니다.');
+      const replace=confirm(`${imported.length}명을 불러왔어요.\n확인: 기존 명단을 지우고 교체\n취소: 기존 명단에 추가`);
+      players=replace?imported:[...players,...imported];
+      savePlayers();
+      updateEstimate();
+      alert(`${imported.length}명의 명단을 반영했어요.`);
+    }catch(err){
+      alert('명단 파일을 읽지 못했어요. 첫 행에 이름, 성별, 급수, 팀 제목이 있는지 확인해주세요.');
+    }
+    e.target.value='';
+  };
+  if(file.name.toLowerCase().endsWith('.json'))reader.readAsText(file);
+  else reader.readAsArrayBuffer(file);
+}
+function exportRosterExcel(){
+  const data=players.map(p=>({이름:p.name,성별:p.gender,급수:p.grade,팀:p.team||'팀1'}));
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'선수명단');
+  XLSX.writeFile(wb,'오늘콕_선수명단.xlsx');
+}
+function downloadRosterTemplate(){
+  const data=[
+    {이름:'가영',성별:'여',급수:'S',팀:'팀1'},
+    {이름:'나연',성별:'여',급수:'A',팀:'팀1'},
+    {이름:'민지',성별:'여',급수:'B',팀:'팀2'}
+  ];
+  const ws=XLSX.utils.json_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'입력양식');
+  XLSX.writeFile(wb,'오늘콕_명단입력양식.xlsx');
+}
 
 let rosterFilter='all';
 let fixedPartners=JSON.parse(localStorage.getItem('todaycock_fixed_partners')||'{}');
@@ -1776,7 +2107,7 @@ function checkAppLock(){
   if(localStorage.getItem('todaycock_pin'))openModal('unlockModal');
 }
 
-loadSettings();loadEventInfo();renderPlayers();renderSchedule();toggleFixedPartnerBox();checkAppLock();
+loadSettings();loadEventInfo();renderPlayers();toggleTargetGames();updateEstimate();renderSchedule();toggleFixedPartnerBox();checkAppLock();
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 let deferredInstallPrompt=null;
