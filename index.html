@@ -80,6 +80,44 @@
 
 
 
+
+    .home-panel{
+      max-width:1080px;margin:0 auto 14px;padding:0 14px;
+    }
+    .home-card{
+      background:var(--card);border:1px solid rgba(255,255,255,.8);border-radius:20px;
+      padding:16px;box-shadow:0 12px 28px rgba(38,80,54,.11);
+    }
+    .home-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+    .home-title h2{margin:0;font-size:19px}
+    .menu-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+    .menu-btn{background:#edf5ef;color:var(--green);padding:11px 8px;font-size:13px}
+    .menu-btn:hover{background:#dfeee3}
+    .event-info-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:8px;margin-top:12px}
+    .event-info-grid label{margin-top:0}
+    .v2-badge{font-size:11px;padding:4px 8px;border-radius:999px;background:#e8f4ec;color:var(--green);font-weight:800}
+    .history-list{display:grid;gap:8px;margin-top:10px}
+    .history-item{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fafdfb}
+    .history-meta{font-size:12px;color:#728078;margin-top:3px}
+    .qr-box{display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center}
+    .qr-box img{width:150px;height:150px;border-radius:12px;border:1px solid var(--line);background:white;padding:7px}
+    .mvp-box{margin:14px 0;padding:15px;border:1px solid var(--line);border-radius:16px;background:#fffaf0;text-align:center}
+    .mvp-box strong{display:block;font-size:22px;color:var(--green);margin:3px 0}
+    .lock-panel{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+    .lock-panel > div{flex:1;min-width:150px}
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(17,34,25,.55);display:none;align-items:center;justify-content:center;
+      z-index:9999;padding:18px;
+    }
+    .modal-box{max-width:420px;width:100%;background:white;border-radius:18px;padding:20px}
+    .modal-box h3{margin-top:0}
+    @media(max-width:760px){
+      .menu-grid{grid-template-columns:repeat(2,1fr)}
+      .event-info-grid{grid-template-columns:1fr 1fr}
+      .qr-box{grid-template-columns:1fr;text-align:center}
+      .qr-box img{margin:auto}
+    }
+
     .install-banner{
       max-width:1080px;margin:0 auto 8px;padding:0 14px;display:none;
     }
@@ -163,6 +201,82 @@
   </div>
 </div>
 
+
+
+<section class="home-panel no-print">
+  <div class="home-card">
+    <div class="home-title">
+      <h2>오늘콕 v2.0</h2>
+      <span class="v2-badge">Made by 김승주 · 안산시</span>
+    </div>
+
+    <div class="menu-grid">
+      <button class="menu-btn" onclick="goSection('playersCard')">👥 선수관리</button>
+      <button class="menu-btn" onclick="goSection('setupCard')">🤝 교류전 만들기</button>
+      <button class="menu-btn" onclick="showTab('overview');goSection('resultCard')">📋 한눈에 보기</button>
+      <button class="menu-btn" onclick="openHistory()">📅 지난 경기</button>
+      <button class="menu-btn" onclick="openShare()">📱 설치 공유</button>
+    </div>
+
+    <div class="event-info-grid">
+      <div><label>교류전 이름</label><input id="eventName" placeholder="예: 오늘콕 vs 셔틀퀸"></div>
+      <div><label>날짜</label><input id="eventDate" type="date"></div>
+      <div><label>팀1 이름</label><input id="team1Name" placeholder="팀1"></div>
+      <div><label>팀2 이름</label><input id="team2Name" placeholder="팀2"></div>
+    </div>
+    <div class="actions">
+      <button class="secondary" onclick="saveEventInfo()">교류전 정보 저장</button>
+      <button class="primary" onclick="saveCurrentEvent()">현재 경기 보관</button>
+      <button class="ghost" onclick="openLockSettings()">잠금 설정</button>
+    </div>
+  </div>
+</section>
+
+<div class="modal-backdrop" id="historyModal">
+  <div class="modal-box">
+    <h3>지난 경기</h3>
+    <div id="historyList" class="history-list"></div>
+    <div class="actions"><button class="ghost" onclick="closeModal('historyModal')">닫기</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="shareModal">
+  <div class="modal-box">
+    <h3>오늘콕 설치 공유</h3>
+    <div class="qr-box">
+      <img src="todaycock-qr.png" alt="오늘콕 설치 주소 QR코드">
+      <div>
+        <p>상대방이 QR코드를 찍으면 오늘콕 설치 주소가 열려요.</p>
+        <p class="muted">아이폰: Safari → 공유 → 홈 화면에 추가<br>갤럭시: Chrome → 앱 설치</p>
+        <button class="secondary" onclick="copyShareAddress()">주소 복사</button>
+      </div>
+    </div>
+    <div class="actions"><button class="ghost" onclick="closeModal('shareModal')">닫기</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="lockModal">
+  <div class="modal-box">
+    <h3>앱 잠금 설정</h3>
+    <p class="muted">이 잠금은 현재 휴대폰에서 앱을 열 때만 사용하는 간단한 보호 기능입니다.</p>
+    <div class="lock-panel">
+      <div><label>새 비밀번호</label><input id="newPin" type="password" inputmode="numeric" maxlength="8" placeholder="4~8자리"></div>
+      <button class="primary" onclick="savePin()">저장</button>
+      <button class="danger" onclick="removePin()">잠금 해제</button>
+    </div>
+    <div class="actions"><button class="ghost" onclick="closeModal('lockModal')">닫기</button></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="unlockModal">
+  <div class="modal-box">
+    <h3>오늘콕 잠금</h3>
+    <label>비밀번호</label>
+    <input id="unlockPin" type="password" inputmode="numeric" maxlength="8" placeholder="비밀번호 입력">
+    <div class="actions"><button class="primary" onclick="unlockApp()">열기</button></div>
+    <p id="unlockMessage" class="muted"></p>
+  </div>
+</div>
 
 <main>
   <div class="grid">
@@ -478,6 +592,7 @@ function renderOverview(){
   overviewArea.className='';
   overviewArea.innerHTML=`
     <div class="overview-head">
+      <div><b>${esc(eventInfo.name||'배드민턴 교류전')}</b><div class="muted">${esc(eventInfo.date||'')} · ${esc(eventInfo.team1||'팀1')} vs ${esc(eventInfo.team2||'팀2')}</div></div>
       <div class="overview-summary">
         <span>총 ${schedule.length}라운드</span>
         <span>총 ${totalMatches}경기</span>
@@ -571,18 +686,21 @@ function renderStats(){
 
   const teamTable=(team)=>{
     const rows=Object.values(stats).filter(s=>s.team===team).sort((a,b)=>b.games-a.games||a.name.localeCompare(b.name));
-    return `<div class="team-stat-box"><h3>${team} 선수별 통계</h3>
+    return `<div class="team-stat-box"><h3>${team==='팀1'?esc(eventInfo.team1||'팀1'):esc(eventInfo.team2||'팀2')} 선수별 통계</h3>
       <table class="match-table"><thead><tr><th>선수</th><th>경기</th><th>승</th><th>패</th><th>무</th></tr></thead>
       <tbody>${rows.length?rows.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td>${s.games}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.draws}</td></tr>`).join(''):'<tr><td colspan="5">등록된 기록이 없습니다.</td></tr>'}</tbody></table>
     </div>`;
   };
   const t1=teamTotals['팀1'],t2=teamTotals['팀2'];
   statsArea.className='';
+  const eligibleMvp=Object.values(stats).filter(s=>s.games>0).sort((a,b)=>b.wins-a.wins||((b.wins/b.games)-(a.wins/a.games))||b.games-a.games);
+  const mvp=eligibleMvp[0];
   statsArea.innerHTML=`
+    ${mvp?`<div class="mvp-box"><span>🏆 오늘의 MVP</span><strong>${esc(mvp.name)}</strong><small>${mvp.team} · ${mvp.games}경기 ${mvp.wins}승 · 승률 ${Math.round((mvp.wins/mvp.games)*100)}%</small></div>`:''}
     <div class="team-scoreboard">
-      <div class="team-total"><span>팀1</span><strong>${t1.wins}승</strong><small>${t1.losses}패 ${t1.draws}무 · 득점 ${t1.pointsFor}</small></div>
+      <div class="team-total"><span>${esc(eventInfo.team1||'팀1')}</span><strong>${t1.wins}승</strong><small>${t1.losses}패 ${t1.draws}무 · 득점 ${t1.pointsFor}</small></div>
       <b>VS</b>
-      <div class="team-total"><span>팀2</span><strong>${t2.wins}승</strong><small>${t2.losses}패 ${t2.draws}무 · 득점 ${t2.pointsFor}</small></div>
+      <div class="team-total"><span>${esc(eventInfo.team2||'팀2')}</span><strong>${t2.wins}승</strong><small>${t2.losses}패 ${t2.draws}무 · 득점 ${t2.pointsFor}</small></div>
     </div>
     <div class="team-stats-grid">${teamTable('팀1')}${teamTable('팀2')}</div>`;
 }
@@ -613,7 +731,123 @@ function resetAll(){
   players=[];schedule=[];location.reload();
 }
 document.getElementById('playerName').addEventListener('keydown',e=>{if(e.key==='Enter')addPlayer()});
-loadSettings();renderPlayers();renderSchedule();
+
+const SHARE_URL='https://rlatmdwn11.github.io/todaycock/';
+let eventInfo=JSON.parse(localStorage.getItem('todaycock_event_info')||'{}');
+let eventHistory=JSON.parse(localStorage.getItem('todaycock_history')||'[]');
+
+function goSection(id){
+  const el=document.getElementById(id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function openModal(id){document.getElementById(id).style.display='flex'}
+function closeModal(id){document.getElementById(id).style.display='none'}
+function openShare(){openModal('shareModal')}
+function copyShareAddress(){
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(SHARE_URL).then(()=>alert('설치 주소를 복사했어요.'));
+  }else{
+    prompt('아래 주소를 복사해주세요.',SHARE_URL);
+  }
+}
+function loadEventInfo(){
+  eventName.value=eventInfo.name||'';
+  eventDate.value=eventInfo.date||new Date().toISOString().slice(0,10);
+  team1Name.value=eventInfo.team1||'팀1';
+  team2Name.value=eventInfo.team2||'팀2';
+}
+function saveEventInfo(){
+  eventInfo={
+    name:eventName.value.trim()||'배드민턴 교류전',
+    date:eventDate.value,
+    team1:team1Name.value.trim()||'팀1',
+    team2:team2Name.value.trim()||'팀2'
+  };
+  localStorage.setItem('todaycock_event_info',JSON.stringify(eventInfo));
+  alert('교류전 정보를 저장했어요.');
+  renderOverview();
+  renderStats();
+}
+function saveCurrentEvent(){
+  if(!schedule.length)return alert('먼저 대진표를 만들어주세요.');
+  saveEventInfo();
+  const snapshot={
+    id:Date.now().toString(),
+    savedAt:new Date().toISOString(),
+    eventInfo:JSON.parse(JSON.stringify(eventInfo)),
+    players:JSON.parse(JSON.stringify(players)),
+    schedule:JSON.parse(JSON.stringify(schedule))
+  };
+  eventHistory.unshift(snapshot);
+  eventHistory=eventHistory.slice(0,30);
+  localStorage.setItem('todaycock_history',JSON.stringify(eventHistory));
+  alert('현재 교류전을 지난 경기에 보관했어요.');
+}
+function openHistory(){
+  const box=document.getElementById('historyList');
+  if(!eventHistory.length){
+    box.innerHTML='<div class="empty">보관된 경기가 없습니다.</div>';
+  }else{
+    box.innerHTML=eventHistory.map((h,i)=>`
+      <div class="history-item">
+        <div>
+          <b>${esc(h.eventInfo?.name||'교류전')}</b>
+          <div class="history-meta">${h.eventInfo?.date||''} · ${h.schedule.reduce((s,r)=>s+r.matches.length,0)}경기</div>
+        </div>
+        <div class="actions" style="margin:0">
+          <button class="secondary small-btn" onclick="restoreHistory(${i})">불러오기</button>
+          <button class="danger small-btn" onclick="deleteHistory(${i})">삭제</button>
+        </div>
+      </div>`).join('');
+  }
+  openModal('historyModal');
+}
+function restoreHistory(index){
+  const h=eventHistory[index]; if(!h)return;
+  if(!confirm('현재 명단과 대진표를 이 기록으로 바꿀까요?'))return;
+  players=JSON.parse(JSON.stringify(h.players));
+  schedule=JSON.parse(JSON.stringify(h.schedule));
+  eventInfo=JSON.parse(JSON.stringify(h.eventInfo||{}));
+  localStorage.setItem('todaycock_players',JSON.stringify(players));
+  localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));
+  localStorage.setItem('todaycock_event_info',JSON.stringify(eventInfo));
+  renderPlayers();renderSchedule();loadEventInfo();
+  closeModal('historyModal');
+  alert('지난 경기를 불러왔어요.');
+}
+function deleteHistory(index){
+  if(!confirm('이 기록을 삭제할까요?'))return;
+  eventHistory.splice(index,1);
+  localStorage.setItem('todaycock_history',JSON.stringify(eventHistory));
+  openHistory();
+}
+function openLockSettings(){openModal('lockModal')}
+function savePin(){
+  const pin=newPin.value.trim();
+  if(!/^\d{4,8}$/.test(pin))return alert('숫자 4~8자리로 입력해주세요.');
+  localStorage.setItem('todaycock_pin',pin);
+  newPin.value='';
+  closeModal('lockModal');
+  alert('이 기기에 앱 잠금을 설정했어요.');
+}
+function removePin(){
+  localStorage.removeItem('todaycock_pin');
+  closeModal('lockModal');
+  alert('앱 잠금을 해제했어요.');
+}
+function unlockApp(){
+  const saved=localStorage.getItem('todaycock_pin');
+  if(unlockPin.value===saved){
+    closeModal('unlockModal');
+    unlockPin.value='';
+    unlockMessage.textContent='';
+  }else unlockMessage.textContent='비밀번호가 맞지 않습니다.';
+}
+function checkAppLock(){
+  if(localStorage.getItem('todaycock_pin'))openModal('unlockModal');
+}
+
+loadSettings();loadEventInfo();renderPlayers();renderSchedule();checkAppLock();
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 let deferredInstallPrompt=null;
