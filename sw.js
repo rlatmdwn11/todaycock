@@ -1,4 +1,4 @@
-const CACHE='todaycock-pwa-v2';
+const CACHE='todaycock-pwa-v21';
 const ASSETS=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./todaycock-qr.png'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));

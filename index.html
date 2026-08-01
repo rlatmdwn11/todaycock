@@ -20,19 +20,13 @@
     }
     *{box-sizing:border-box}
     body{
-      margin:0; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR",sans-serif;
-      background:
-        radial-gradient(circle at 10% 10%, rgba(255,255,255,.75), transparent 28%),
-        linear-gradient(145deg,#dff4df,#fff4c8 58%,#d8f0da);
+      margin:0;
+      color:var(--ink);
+      font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR",sans-serif;
+      background:#f4f9f2;
       min-height:100vh;
     }
-    body:before{
-      content:""; position:fixed; inset:0; pointer-events:none; opacity:.11;
-      background-image:
-        linear-gradient(30deg, transparent 45%, #2b7d4f 46%, #2b7d4f 48%, transparent 49%),
-        linear-gradient(-30deg, transparent 45%, #2b7d4f 46%, #2b7d4f 48%, transparent 49%);
-      background-size:72px 72px;
-    }
+    body:before{display:none}
     header{padding:28px 18px 12px;text-align:center;position:relative}
     .logo{font-size:34px;font-weight:900;letter-spacing:-2px;color:var(--green)}
     .logo span{display:inline-block;transform:rotate(-8deg);margin-left:4px}
@@ -186,7 +180,150 @@
       main{max-width:none;padding:0}
       .card{box-shadow:none;border:0;padding:0}
     }
-  </style>
+  
+    /* v2.1 UI size consistency */
+    header{padding:28px 18px 18px}
+    main{padding-top:8px}
+    .card,.home-card{
+      background:rgba(255,255,255,.96);
+      border:1px solid var(--line);
+      border-radius:20px;
+      box-shadow:0 10px 24px rgba(38,80,54,.08);
+    }
+    .home-card,.card{padding:18px}
+    .home-title{align-items:center}
+    .menu-grid{
+      grid-template-columns:repeat(2,1fr);
+      gap:10px;
+      margin-top:14px;
+    }
+    .menu-btn{
+      min-height:52px;
+      border-radius:14px;
+      padding:10px 12px;
+      font-size:15px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+    }
+    .menu-btn:last-child:nth-child(odd){grid-column:1/-1}
+    .event-info-grid{
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:16px;
+    }
+    label{
+      font-size:14px;
+      margin:12px 0 7px;
+    }
+    input,select{
+      min-height:48px;
+      height:48px;
+      padding:0 14px;
+      border-radius:14px;
+      font-size:16px;
+    }
+    input[type="number"]{height:48px}
+    button{
+      min-height:46px;
+      border-radius:14px;
+      padding:0 16px;
+      font-size:15px;
+    }
+    .actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+    .actions > *{
+      width:100%;
+      margin:0;
+      min-height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .actions > :last-child:nth-child(odd){grid-column:1/-1}
+    .grid{gap:16px}
+    .row,.row3{gap:12px}
+    .player-form{
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      align-items:end;
+    }
+    .player-form .name-wrap{grid-column:1/-1}
+    .player-form button{grid-column:1/-1}
+    .player{
+      min-height:50px;
+      border-radius:14px;
+    }
+    .tabs{gap:8px}
+    .tab{
+      min-height:44px;
+      padding:0 12px;
+      font-size:14px;
+    }
+    .install-box{
+      min-height:56px;
+      border-radius:14px;
+    }
+    .install-btn{
+      min-height:40px;
+      height:40px;
+      padding:0 14px;
+    }
+    .score{
+      width:64px;
+      min-height:40px;
+      height:40px;
+      padding:0 8px;
+    }
+    .edit-select{
+      min-width:120px;
+      min-height:40px;
+      height:40px;
+      padding:0 8px;
+      font-size:13px;
+    }
+    .small-btn{
+      min-height:38px;
+      height:38px;
+      padding:0 10px;
+      font-size:12px;
+    }
+    .modal-box{
+      border-radius:20px;
+      padding:20px;
+    }
+    .lock-panel{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      align-items:end;
+    }
+    .lock-panel > div{
+      grid-column:1/-1;
+      min-width:0;
+    }
+    @media(max-width:760px){
+      .event-info-grid{grid-template-columns:1fr 1fr}
+      .row,.row3{grid-template-columns:1fr 1fr}
+      .row3 > :last-child:nth-child(odd){grid-column:1/-1}
+      .player-form{grid-template-columns:1fr 1fr}
+      .menu-grid{grid-template-columns:1fr 1fr}
+      .actions{grid-template-columns:1fr 1fr}
+      .edit-select{min-width:0;width:100%;margin-bottom:5px}
+    }
+    @media(max-width:420px){
+      .home-panel,main{padding-left:10px;padding-right:10px}
+      .home-card,.card{padding:15px}
+      .menu-btn{font-size:14px}
+      input,select{font-size:15px}
+    }
+
+</style>
 </head>
 <body>
 <header>
@@ -206,7 +343,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v2.0</h2>
+      <h2>오늘콕 v2.1</h2>
       <span class="v2-badge">Made by 김승주 · 안산시</span>
     </div>
 
