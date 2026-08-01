@@ -1123,32 +1123,6 @@
       background:#f7fbf8 !important;
     }
 
-
-    /* Version 2.0 release */
-    .start-form{margin-top:22px;text-align:left}
-    .start-form label{margin-top:13px}
-    .start-help{margin-top:6px;font-size:12px;line-height:1.45;color:#78867e}
-    .required-mark{display:inline-flex;margin-left:5px;padding:2px 6px;border-radius:999px;background:#ffe9e9;color:#b83b3b;font-size:10px}
-    .optional-mark{color:#7d8a83;font-size:11px;font-weight:700}
-    .start-error{color:#c84343;font-size:12px;margin-top:8px;min-height:16px}
-    .start-main-btn{width:100%;margin-top:10px}
-    .settings-fab{position:fixed;top:12px;right:12px;z-index:10001;width:42px;height:42px;min-height:42px;padding:0;border-radius:50%;background:white;color:var(--green);border:1px solid var(--line);box-shadow:0 8px 20px rgba(38,80,54,.12)}
-    .roster-generate-panel{margin-top:16px;padding:15px;border:1px solid var(--line);border-radius:16px;background:#f7fbf8}
-    .roster-ready-title{font-weight:900;color:var(--green);margin-bottom:8px}
-    .roster-ready-summary{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
-    .roster-ready-summary span{padding:5px 9px;border-radius:999px;background:white;border:1px solid var(--line);font-size:12px;font-weight:800}
-    .roster-generate-btn{width:100%;min-height:52px;font-size:16px}
-    .records-list{display:grid;gap:10px}
-    .record-item{border:1px solid var(--line);border-radius:15px;background:white;padding:13px}
-    .record-item-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-    .record-item h4{margin:0 0 4px;color:var(--green)}
-    .record-meta{color:#748078;font-size:12px;line-height:1.5}
-    .record-actions{display:flex;gap:7px;margin-top:10px}
-    .record-actions button{min-height:36px;height:36px;font-size:12px}
-    .record-modal-box{width:min(760px,94vw);max-height:88vh;overflow:auto}
-    .record-readonly-match{padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:#f8fbf9}
-    .record-readonly-match strong{display:block;margin-bottom:4px;color:var(--green)}
-
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="firebase-config.js"></script>
@@ -1159,8 +1133,6 @@
 
 </head>
 <body>
-<button class="settings-fab no-print" type="button" onclick="openSettingsPassword()">⚙️</button>
-
 
 <div class="v4-splash" id="v4Splash">
   <div class="v4-splash-card">
@@ -1168,26 +1140,16 @@
     <h1 class="v4-ko-title">오늘콕</h1>
     <div class="v4-en-title">TODAYCOCK</div>
     <div class="v4-subtitle">배드민턴 대진 매니저</div>
-    <div class="v4-version">Version 2.0</div>
+    <div class="v4-version">Version 4.3</div>
     <div class="v4-maker">Made by 김승주</div>
 
-    <div class="start-form">
-      <label>운영자 코드 <b class="required-mark">필수</b></label>
-      <input id="startAdminCode" type="password" inputmode="numeric" placeholder="운영자 코드를 입력하세요">
-      <div class="start-help">운영자 코드를 알아야 오늘콕 운영자 모드를 사용할 수 있어요.</div>
-
-      <label>닉네임 <span class="optional-mark">선택</span></label>
-      <input id="startNickname" maxlength="20" placeholder="예: 승주">
-      <div class="start-help">실시간 관람 공유를 사용할 경우 입력해주세요. 닉네임을 입력하면 Firebase 익명 로그인이 자동으로 연결돼요.</div>
-
-      <div id="adminCodeMessage" class="start-error"></div>
-
-      <button class="primary start-main-btn" type="button" onclick="enterAdminMode()">운영자 모드 시작</button>
-      <button class="secondary start-main-btn" type="button" onclick="openViewerPage()">관람 모드</button>
+    <div class="v4-mode-buttons">
+      <button class="primary" type="button" onclick="enterAdminMode()">운영자 모드</button>
+      <button class="secondary" type="button" onclick="openViewerPage()">관람 모드</button>
     </div>
+    <div class="v4-viewer-note">관람 모드는 공유받은 팀전 코드를 입력해 대진표와 진행률을 읽기 전용으로 보는 화면입니다.</div>
   </div>
 </div>
-
 
 <header>
   <div class="logo">오늘콕 <span>🏸</span></div>
@@ -1206,7 +1168,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v2.0</h2>
+      <h2>오늘콕 v4.3</h2>
       <span class="v2-badge">Made by 김승주</span>
     </div>
 
@@ -1272,50 +1234,6 @@
   </div>
 </div>
 
-
-
-<div class="modal-backdrop" id="settingsPasswordModal">
-  <div class="modal-box">
-    <h3>설정 열기</h3>
-    <p class="muted">설정 비밀번호를 입력해주세요.</p>
-    <input id="settingsPasswordInput" type="password" placeholder="설정 비밀번호">
-    <div class="actions">
-      <button class="primary" type="button" onclick="verifySettingsPassword()">확인</button>
-      <button class="ghost" type="button" onclick="closeModal('settingsPasswordModal')">닫기</button>
-    </div>
-    <p id="settingsPasswordMessage" class="start-error"></p>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="adminCodeSettingsModal">
-  <div class="modal-box">
-    <h3>운영자 코드 변경</h3>
-    <label>현재 운영자 코드</label>
-    <input id="currentAdminCodeInput" type="password">
-    <label>새 운영자 코드</label>
-    <input id="newAdminCodeInput" type="password">
-    <label>새 운영자 코드 확인</label>
-    <input id="newAdminCodeConfirmInput" type="password">
-    <div class="actions">
-      <button class="primary" type="button" onclick="changeAdminCode()">변경하기</button>
-      <button class="ghost" type="button" onclick="closeModal('adminCodeSettingsModal')">닫기</button>
-    </div>
-    <p id="adminCodeSettingsMessage" class="start-error"></p>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="nicknameModal">
-  <div class="modal-box">
-    <h3>실시간 공유 닉네임</h3>
-    <p class="muted">실시간 관람 공유를 사용하려면 닉네임을 입력해주세요.</p>
-    <input id="nicknameModalInput" maxlength="20" placeholder="예: 승주">
-    <div class="actions">
-      <button class="primary" type="button" onclick="saveNicknameAndLogin()">저장 후 연결</button>
-      <button class="ghost" type="button" onclick="closeModal('nicknameModal')">닫기</button>
-    </div>
-    <p id="nicknameModalMessage" class="start-error"></p>
-  </div>
-</div>
 
 <div class="modal-backdrop" id="firebaseLoginModal">
   <div class="modal-box">
@@ -1396,7 +1314,7 @@
       </div>
 
       <div class="actions">
-        
+        <button class="primary" onclick="generateSchedule()">대진표 만들기</button>
         <button class="secondary" onclick="rerollSchedule()">같은 조건 다시 뽑기</button>
         <button class="secondary" onclick="saveSettings()">설정 저장</button>
         <button class="ghost" onclick="resetAll()">전체 초기화</button>
@@ -1451,26 +1369,41 @@
 
 
     
-
 <section class="card full no-print" id="liveShareCard">
   <h2>실시간 관람 공유</h2>
-  <p class="muted">닉네임을 입력한 운영자는 익명 로그인으로 공유할 수 있고, 참가자는 링크만 열어 읽기 전용으로 볼 수 있어요.</p>
+  <p class="muted">운영자는 로그인 후 공유를 시작하고, 참가자는 링크만 열어 읽기 전용으로 볼 수 있어요.</p>
+
   <div class="live-status-grid">
-    <div class="live-status-item"><span>공유 운영자</span><strong id="firebaseAuthStatus">닉네임 미설정</strong></div>
-    <div class="live-status-item"><span>공유 상태</span><strong id="liveShareStatusText">공유 안 함</strong></div>
+    <div class="live-status-item">
+      <span>운영자 로그인</span>
+      <strong id="firebaseAuthStatus">로그아웃</strong>
+    </div>
+    <div class="live-status-item">
+      <span>공유 상태</span>
+      <strong id="liveShareStatusText">공유 안 함</strong>
+    </div>
   </div>
+
   <div class="row">
-    <div><label>팀전 공유 코드</label><input id="liveRoomCode" placeholder="공유 시작 후 자동 생성" readonly></div>
-    <div><label>관람 링크</label><input id="liveViewerUrl" placeholder="공유 시작 후 생성" readonly></div>
+    <div>
+      <label>팀전 공유 코드</label>
+      <input id="liveRoomCode" placeholder="공유 시작 후 자동 생성" readonly>
+    </div>
+    <div>
+      <label>관람 링크</label>
+      <input id="liveViewerUrl" placeholder="공유 시작 후 생성" readonly>
+    </div>
   </div>
+
   <div class="actions">
+    <button class="ghost" type="button" onclick="openFirebaseLogin()">운영자 로그인</button>
     <button class="primary" type="button" onclick="startLiveShare()">공유 시작</button>
     <button class="secondary" type="button" onclick="copyViewerLink()">관람 링크 복사</button>
     <button class="danger" type="button" onclick="stopLiveShare()">공유 종료</button>
   </div>
-  <p class="notice">※ 닉네임이 없으면 공유 시작 시 닉네임 입력창이 열립니다.</p>
-</section>
 
+  <p class="notice">※ 공유 중에는 점수, 진행률, 대진 변경이 관람 화면에 자동 반영됩니다.</p>
+</section>
 
 
     <section class="card full" id="resultCard">
@@ -1520,14 +1453,6 @@
     </section>
   </div>
   <div class="creator-credit">Made by 김승주 · 안산시</div>
-
-    <section class="card full" id="recordsCard">
-      <div class="section-head">
-        <div><h2>지난 기록</h2><p class="muted">종료한 팀전을 저장하고 읽기 전용으로 다시 볼 수 있어요.</p></div>
-        <button class="primary small-btn no-print" type="button" onclick="saveCurrentRecord()">현재 기록 저장</button>
-      </div>
-      <div id="recordsList" class="records-list"></div>
-    </section>
 </main>
 
 <script>
@@ -1584,7 +1509,6 @@ function renderPlayers(){
 
   renderFixedPartnerList();
   updateEstimate();
-  updateRosterReadySummary();
 }
 function addSample(){
   if(players.length && !confirm('현재 명단 뒤에 가상 명단을 추가할까요?'))return;
@@ -1731,80 +1655,6 @@ function generateRandom(opts){
     if(matches.length)result.push({round:r,matches});
   } return result;
 }
-
-function generateTeamBattle(opts, balancedMode){
-  const team1Pool=eligible().filter(p=>(p.team||'팀1')==='팀1');
-  const team2Pool=eligible().filter(p=>(p.team||'팀1')==='팀2');
-
-  const result=[];
-  const games={};
-  const partnerCounts={};
-  const opponentCounts={};
-  players.forEach(p=>games[p.id]=0);
-
-  const pairKey=(a,b)=>[a.id,b.id].sort().join('|');
-  const oppKey=(a,b)=>[a.id,b.id].sort().join('|');
-
-  function choosePair(pool){
-    if(pool.length<2)return null;
-    if(!balancedMode){
-      const shuffled=shuffle(pool);
-      return [shuffled[0],shuffled[1]];
-    }
-
-    let best=null,bestScore=Infinity;
-    for(let i=0;i<pool.length;i++){
-      for(let j=i+1;j<pool.length;j++){
-        const a=pool[i],b=pool[j];
-        const score=(games[a.id]||0)+(games[b.id]||0)
-          +(partnerCounts[pairKey(a,b)]||0)*4
-          +Math.random();
-        if(score<bestScore){
-          bestScore=score;
-          best=[a,b];
-        }
-      }
-    }
-    return best;
-  }
-
-  let made=0;
-  for(let round=1;round<=opts.rounds && made<opts.targetGames;round++){
-    const matches=[];
-    const used=new Set();
-
-    for(let court=1;court<=opts.courts && made<opts.targetGames;court++){
-      const available1=team1Pool.filter(p=>!used.has(p.id));
-      const available2=team2Pool.filter(p=>!used.has(p.id));
-      const pair1=choosePair(available1);
-      const pair2=choosePair(available2);
-      if(!pair1||!pair2)break;
-
-      matches.push({
-        court,
-        team1:pair1,
-        team2:pair2,
-        score1:'',
-        score2:''
-      });
-
-      [...pair1,...pair2].forEach(p=>{
-        used.add(p.id);
-        games[p.id]=(games[p.id]||0)+1;
-      });
-      partnerCounts[pairKey(pair1[0],pair1[1])]=(partnerCounts[pairKey(pair1[0],pair1[1])]||0)+1;
-      partnerCounts[pairKey(pair2[0],pair2[1])]=(partnerCounts[pairKey(pair2[0],pair2[1])]||0)+1;
-      pair1.forEach(a=>pair2.forEach(b=>{
-        opponentCounts[oppKey(a,b)]=(opponentCounts[oppKey(a,b)]||0)+1;
-      }));
-      made++;
-    }
-
-    if(matches.length)result.push({round,matches});
-  }
-  return result;
-}
-
 function generateFixed(opts){
   const chosen=getFixedTeams();
   let teams=chosen.length?chosen:[];
@@ -1851,11 +1701,8 @@ let scheduleMode=localStorage.getItem('todaycock_schedule_mode')||'';
 function currentScheduleMode(){
   return scheduleMode || method.value;
 }
-function isFixedPartnerMode(){
-  return currentScheduleMode()==='fixed';
-}
 function isTeamBattleMode(){
-  return ['fixed','interteam','team'].includes(currentScheduleMode());
+  return currentScheduleMode()==='fixed';
 }
 function sideLabel(side){
   if(isTeamBattleMode()){
@@ -1868,13 +1715,10 @@ function overviewCompetitionLabel(){
     return `${eventInfo.team1||'팀1'} vs ${eventInfo.team2||'팀2'}`;
   }
   return '모임 내 대진';
-} vs ${eventInfo.team2||'팀2'}`;
-  }
-  return '모임 내 대진';
 }
 
 function playerOptions(selectedId, requiredTeam){
-  const forceTeam=isTeamBattleMode();
+  const forceTeam=method.value==='fixed';
   return players
     .filter(p=>!forceTeam || !requiredTeam || (p.team||'팀1')===requiredTeam)
     .map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${esc(p.name)} (${p.grade}${forceTeam?'·'+(p.team||'팀1'):''})</option>`)
@@ -2120,17 +1964,9 @@ function renderStats(){
     statsArea.innerHTML=`
       ${mvp?`<div class="mvp-box"><span>🏆 오늘의 MVP</span><strong>${esc(mvp.name)}</strong><small>${mvp.team} · ${mvp.games}경기 ${mvp.wins}승 · 승률 ${Math.round((mvp.wins/mvp.games)*100)}%</small></div>`:''}
       <div class="team-scoreboard">
-        <div class="team-total">
-          <span>${esc(eventInfo.team1||'팀1')}</span>
-          <strong>${t1.wins}승</strong>
-          <small>${t1.losses}패 ${t1.draws}무 · 득점 ${t1.pointsFor}</small>
-        </div>
-        <b>${t1.wins===t2.wins?'동률':t1.wins>t2.wins?'우세':'열세'} · VS · ${t2.wins===t1.wins?'동률':t2.wins>t1.wins?'우세':'열세'}</b>
-        <div class="team-total">
-          <span>${esc(eventInfo.team2||'팀2')}</span>
-          <strong>${t2.wins}승</strong>
-          <small>${t2.losses}패 ${t2.draws}무 · 득점 ${t2.pointsFor}</small>
-        </div>
+        <div class="team-total"><span>${esc(eventInfo.team1||'팀1')}</span><strong>${t1.wins}승</strong><small>${t1.losses}패 ${t1.draws}무 · 득점 ${t1.pointsFor}</small></div>
+        <b>VS</b>
+        <div class="team-total"><span>${esc(eventInfo.team2||'팀2')}</span><strong>${t2.wins}승</strong><small>${t2.losses}패 ${t2.draws}무 · 득점 ${t2.pointsFor}</small></div>
       </div>
       <div class="team-stats-grid">
         ${playerTable(team1Rows,esc(eventInfo.team1||'팀1')+' 선수별 통계')}
@@ -2865,15 +2701,5 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 </script>
-
-<div class="modal-backdrop" id="recordViewModal">
-  <div class="modal-box record-modal-box">
-    <div class="section-head">
-      <h3 id="recordViewTitle">지난 기록</h3>
-      <button class="ghost small-btn" type="button" onclick="closeModal('recordViewModal')">닫기</button>
-    </div>
-    <div id="recordViewContent"></div>
-  </div>
-</div>
 </body>
 </html>
