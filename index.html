@@ -573,6 +573,123 @@
       .roster-filter-btn{width:100%}
     }
 
+
+    /* v2.4 requested UI corrections */
+    .event-option-check{
+      display:flex;
+      align-items:center;
+      gap:9px;
+      margin-top:16px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#f7fbf8;
+    }
+    .event-option-check .form-check-input{
+      width:20px !important;
+      height:20px !important;
+      min-width:20px !important;
+      min-height:20px !important;
+      margin:0;
+      flex:0 0 20px;
+      appearance:auto;
+      -webkit-appearance:checkbox;
+    }
+    .event-option-check .form-check-label{
+      margin:0;
+      font-size:15px;
+      font-weight:800;
+      line-height:1.2;
+    }
+
+    input[type="date"]{
+      height:48px;
+      min-height:48px;
+      line-height:48px;
+      padding-top:0;
+      padding-bottom:0;
+      text-align:center;
+    }
+    input[type="date"]::-webkit-date-and-time-value{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:48px;
+      line-height:48px;
+      text-align:center;
+    }
+
+    .partner-pair-row{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      align-items:center;
+      gap:8px;
+      margin-bottom:10px;
+    }
+    .partner-player-name{
+      min-height:44px;
+      display:flex;
+      align-items:center;
+      padding:0 12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:white;
+      font-weight:800;
+    }
+    .partner-pair-row select{
+      height:44px;
+      min-height:44px;
+    }
+    .partner-arrow{
+      color:var(--green);
+      font-weight:900;
+      text-align:center;
+    }
+
+    .player{
+      grid-template-columns:minmax(0,1fr) auto auto auto auto;
+      gap:8px;
+      align-items:center;
+    }
+    .player-name-wrap{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+    .player-name-wrap b{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .player-delete-btn{
+      min-height:34px !important;
+      height:34px !important;
+      width:auto !important;
+      padding:0 10px !important;
+      font-size:12px !important;
+      border-radius:10px !important;
+      white-space:nowrap;
+    }
+
+    @media(max-width:760px){
+      .partner-pair-row{
+        grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      }
+      .player{
+        grid-template-columns:minmax(0,1fr) auto auto auto auto;
+      }
+    }
+    @media(max-width:430px){
+      .player{
+        grid-template-columns:minmax(0,1fr) auto auto;
+      }
+      .player .badge:nth-of-type(2),
+      .player .badge:nth-of-type(3){
+        display:none;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -593,7 +710,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v2.3</h2>
+      <h2>오늘콕 v2.4</h2>
       <span class="v2-badge">Made by 김승주 · 안산시</span>
     </div>
 
@@ -607,7 +724,7 @@
 
     <label class="form-check event-option-check">
       <input class="form-check-input" id="useEventInfo" type="checkbox" onchange="toggleEventInfo()">
-      <span class="form-check-label">팀전 이름·날짜·팀 이름 설정하기</span>
+      <span class="form-check-label">팀전 정보 설정하기</span>
     </label>
     <div class="event-info-grid" id="eventInfoFields">
       <div><label>팀전 이름</label><input id="eventName" placeholder="예: 오늘콕 vs 셔틀퀸" disabled></div>
@@ -783,9 +900,27 @@ function removePlayer(id){players=players.filter(p=>p.id!==id);savePlayers()}
 function renderPlayers(){
   const box=document.getElementById('playerList');
   playerSummary.innerHTML=`<span>전체 ${players.length}명</span><span>팀1 ${players.filter(p=>(p.team||'팀1')==='팀1').length}명</span><span>팀2 ${players.filter(p=>p.team==='팀2').length}명</span><span>여 ${players.filter(p=>p.gender==='여').length}명</span><span>남 ${players.filter(p=>p.gender==='남').length}명</span>`;
+
   const visible=rosterFilter==='all'?players:players.filter(p=>(p.team||'팀1')===rosterFilter);
-  if(!visible.length){box.innerHTML='<div class="empty">표시할 선수가 없습니다.</div>';renderFixedPartnerList();return}
-  box.innerHTML=visible.map((p)=>`<div class="player"><b>${esc(p.name)}</b><span class="badge">${p.team||'팀1'}</span><span class="badge">${p.gender}</span><span class="badge">${p.grade}급</span><button class="danger" onclick="removePlayer('${p.id}')">삭제</button></div>`).join('');
+
+  if(!visible.length){
+    box.innerHTML='<div class="empty">표시할 선수가 없습니다.</div>';
+    renderFixedPartnerList();
+    return;
+  }
+
+  box.innerHTML=visible.map(p=>`
+    <div class="player">
+      <div class="player-name-wrap">
+        <b>${esc(p.name)}</b>
+        <button class="danger player-delete-btn" onclick="removePlayer('${p.id}')">삭제</button>
+      </div>
+      <span class="badge">${p.team||'팀1'}</span>
+      <span class="badge">${p.gender}</span>
+      <span class="badge">${p.grade}급</span>
+    </div>
+  `).join('');
+
   renderFixedPartnerList();
 }
 function addSample(){
@@ -1227,31 +1362,31 @@ function teamPlayers(team){
 }
 function renderFixedPartnerList(){
   if(!document.getElementById('fixedPartnerList'))return;
+
   const makeTeam=(team)=>{
     const list=teamPlayers(team);
-    if(list.length<2)return `<div class="partner-team"><h4>${team}</h4><div class="muted">선수가 2명 이상 필요합니다.</div></div>`;
-    const rows=[];
-    const used=new Set();
-    for(const p of list){
-      if(used.has(p.id))continue;
-      const mateId=fixedPartners[p.id];
-      const mate=list.find(x=>x.id===mateId && !used.has(x.id));
-      rows.push([p,mate||null]);
-      used.add(p.id);
-      if(mate)used.add(mate.id);
+    if(list.length<2){
+      return `<div class="partner-team"><h4>${team}</h4><div class="muted">선수가 2명 이상 필요합니다.</div></div>`;
     }
-    return `<div class="partner-team"><h4>${team}</h4>${rows.map((pair,idx)=>`
-      <div class="partner-row">
-        <select onchange="setFixedPartner('${team}',${idx},0,this.value)">
-          ${list.map(p=>`<option value="${p.id}" ${pair[0]?.id===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}
-        </select>
-        <span class="partner-link">↔</span>
-        <select onchange="setFixedPartner('${team}',${idx},1,this.value)">
-          <option value="">파트너 선택</option>
-          ${list.map(p=>`<option value="${p.id}" ${pair[1]?.id===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}
-        </select>
-      </div>`).join('')}</div>`;
+
+    return `<div class="partner-team">
+      <h4>${team}</h4>
+      ${list.map(p=>{
+        const selected=fixedPartners[p.id]||'';
+        return `<div class="partner-pair-row">
+          <div class="partner-player-name">${esc(p.name)}</div>
+          <span class="partner-arrow">↔</span>
+          <select onchange="assignFixedPartner('${p.id}',this.value)">
+            <option value="">파트너 선택</option>
+            ${list.filter(x=>x.id!==p.id).map(x=>`
+              <option value="${x.id}" ${selected===x.id?'selected':''}>${esc(x.name)}</option>
+            `).join('')}
+          </select>
+        </div>`;
+      }).join('')}
+    </div>`;
   };
+
   fixedPartnerList.innerHTML=makeTeam('팀1')+makeTeam('팀2');
 }
 function setFixedPartner(team,rowIndex,pos,playerId){
@@ -1276,6 +1411,25 @@ function setFixedPartner(team,rowIndex,pos,playerId){
   localStorage.setItem('todaycock_fixed_partners',JSON.stringify(fixedPartners));
   renderFixedPartnerList();
 }
+
+function assignFixedPartner(playerId, partnerId){
+  const oldMate=fixedPartners[playerId];
+  if(oldMate)delete fixedPartners[oldMate];
+  delete fixedPartners[playerId];
+
+  if(partnerId){
+    const partnerOldMate=fixedPartners[partnerId];
+    if(partnerOldMate)delete fixedPartners[partnerOldMate];
+    delete fixedPartners[partnerId];
+
+    fixedPartners[playerId]=partnerId;
+    fixedPartners[partnerId]=playerId;
+  }
+
+  localStorage.setItem('todaycock_fixed_partners',JSON.stringify(fixedPartners));
+  renderFixedPartnerList();
+}
+
 function autoPairPartners(){
   fixedPartners={};
   for(const team of ['팀1','팀2']){
