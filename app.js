@@ -12,6 +12,7 @@ const state={
   schedule:[],
   currentRoundIndex:0,
   filter:'all',
+  fixedPairs:{team1:[],team2:[]},
   settings:{
     mode:'balanced',matchType:'women',courts:3,rounds:5,targetGames:null,
     eventInfoEnabled:false,eventName:'',eventDate:'',team1Name:'팀1',team2Name:'팀2'
@@ -90,14 +91,98 @@ function applySettings(){
   $('team1Name').value=state.settings.team1Name||'팀1';
   $('team2Name').value=state.settings.team2Name||'팀2';
   $('eventInfoFields').classList.toggle('hidden',!state.settings.eventInfoEnabled);
+  updateModePanels();
 }
 ['matchMode','matchType','courtCount','roundCount','targetGames','eventName','eventDate','team1Name','team2Name'].forEach(id=>{
-  $(id).addEventListener('change',()=>{readSettings();saveState();renderReady()});
+  $(id).addEventListener('change',()=>{readSettings();updateModePanels();saveState();renderReady();renderAiAdvice()});
 });
 $('eventInfoEnabled').addEventListener('change',()=>{
   $('eventInfoFields').classList.toggle('hidden',!$('eventInfoEnabled').checked);
   readSettings();saveState();
 });
+
+
+function updateModePanels(){
+  const fixed=state.settings.mode==='fixed';
+  $('fixedPartnerPanel').classList.toggle('hidden',!fixed);
+  $('fixedTeam1Title').textContent=state.settings.team1Name||'팀1';
+  $('fixedTeam2Title').textContent=state.settings.team2Name||'팀2';
+  if(fixed)renderFixedPartners();
+}
+function teamPlayers(team){return state.players.filter(p=>p.team===team)}
+function normalizeFixedPairs(){
+  if(!state.fixedPairs)state.fixedPairs={team1:[],team2:[]};
+  ['team1','team2'].forEach((key,idx)=>{
+    const team=idx===0?'팀1':'팀2';
+    const valid=new Set(teamPlayers(team).map(p=>p.id));
+    state.fixedPairs[key]=(state.fixedPairs[key]||[])
+      .map(pair=>(pair||[]).filter(id=>valid.has(id)).slice(0,2))
+      .filter(pair=>pair.length);
+  });
+}
+function fixedOptions(team,selected){
+  return `<option value="">파트너 선택</option>`+teamPlayers(team).map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${esc(p.name)} (${p.grade})</option>`).join('');
+}
+function renderFixedTeam(team,key,targetId){
+  const players=teamPlayers(team);
+  const count=Math.ceil(players.length/2);
+  const pairs=state.fixedPairs[key]||[];
+  while(pairs.length<count)pairs.push([]);
+  if(pairs.length>count)pairs.length=count;
+  $(targetId).innerHTML=count?pairs.map((pair,i)=>`<div class="fixed-pair-row"><span>${i+1}조</span><select data-fixed="${key}|${i}|0">${fixedOptions(team,pair[0])}</select><b>↔</b><select data-fixed="${key}|${i}|1">${fixedOptions(team,pair[1])}</select></div>`).join(''):'<p class="help">해당 팀 선수를 먼저 등록해주세요.</p>';
+}
+function renderFixedPartners(){
+  normalizeFixedPairs();
+  renderFixedTeam('팀1','team1','fixedTeam1Pairs');
+  renderFixedTeam('팀2','team2','fixedTeam2Pairs');
+  document.querySelectorAll('[data-fixed]').forEach(sel=>sel.addEventListener('change',()=>{
+    const [key,row,pos]=sel.dataset.fixed.split('|');
+    const duplicate=(state.fixedPairs[key]||[]).some((pair,i)=>i!==Number(row)&&pair.includes(sel.value));
+    if(sel.value&&duplicate){toast('같은 선수를 두 조에 중복 지정할 수 없습니다.');renderFixedPartners();return}
+    state.fixedPairs[key][Number(row)][Number(pos)]=sel.value;
+    saveState();renderReady();renderAiAdvice();
+  }));
+}
+function autoPairPartners(){
+  const grade={S:5,A:4,B:3,C:2,D:1};
+  ['팀1','팀2'].forEach((team,idx)=>{
+    const key=idx===0?'team1':'team2';
+    const list=[...teamPlayers(team)].sort((a,b)=>(grade[b.grade]||0)-(grade[a.grade]||0));
+    const pairs=[];
+    while(list.length){const a=list.shift();const b=list.pop();pairs.push([a?.id,b?.id].filter(Boolean))}
+    state.fixedPairs[key]=pairs;
+  });
+  saveState();renderFixedPartners();renderReady();renderAiAdvice();toast('급수 균형을 고려해 자동으로 짝지었습니다.');
+}
+$('autoPairBtn').addEventListener('click',autoPairPartners);
+function fixedPairsComplete(){
+  normalizeFixedPairs();
+  return ['team1','team2'].every((key,idx)=>{
+    const team=idx===0?'팀1':'팀2';
+    const ids=(state.fixedPairs[key]||[]).flat().filter(Boolean);
+    return ids.length===teamPlayers(team).length && new Set(ids).size===ids.length && (state.fixedPairs[key]||[]).every(p=>p.length===2);
+  });
+}
+function analyzeSetup(){
+  readSettings();
+  const n=state.players.length,capacity=state.settings.courts*4;
+  const desired=state.settings.targetGames||state.settings.courts*state.settings.rounds;
+  const appearances=desired*4;
+  const average=n?appearances/n:0;
+  const teamMode=['team','fixed'].includes(state.settings.mode);
+  const t1=teamPlayers('팀1').length,t2=teamPlayers('팀2').length;
+  let title='설정 준비 중',text='선수를 4명 이상 등록해주세요.';
+  if(n>=4){
+    title=average>=3?'경기 수가 충분해요':'선수별 경기 수가 적을 수 있어요';
+    text=`예상 1인 평균 ${average.toFixed(1)}경기 · 한 라운드 최대 ${Math.min(capacity,n-n%4)}명 출전.`;
+    if(n>capacity)text+=` 라운드마다 약 ${n-capacity}명이 쉬게 됩니다.`;
+    if(teamMode&&t1!==t2)text+=` 두 팀 인원이 ${Math.abs(t1-t2)}명 차이 나므로 출전 수 차이가 생길 수 있어요.`;
+    if(state.settings.mode==='fixed'&&!fixedPairsComplete())text+=' 고정 파트너 설정을 모두 완료해주세요.';
+  }
+  return {title,text};
+}
+function renderAiAdvice(){const a=analyzeSetup();$('aiAdviceTitle').textContent=a.title;$('aiAdviceText').textContent=a.text}
+$('aiAnalyzeBtn').addEventListener('click',()=>{renderAiAdvice();toast('AI 대진 분석을 완료했습니다.')});
 
 $('addPlayerBtn').addEventListener('click',addPlayer);
 $('playerName').addEventListener('keydown',e=>{if(e.key==='Enter')addPlayer()});
@@ -105,11 +190,11 @@ function addPlayer(){
   const name=$('playerName').value.trim();
   if(!name){toast('선수 이름을 입력해주세요.');return}
   state.players.push({id:uid(),name,team:$('playerTeam').value,gender:$('playerGender').value,grade:$('playerGrade').value});
-  $('playerName').value='';saveState();renderPlayers();renderReady();
+  $('playerName').value='';normalizeFixedPairs();saveState();renderPlayers();renderFixedPartners();renderReady();renderAiAdvice();
 }
 $('clearPlayersBtn').addEventListener('click',()=>{
   if(!state.players.length)return;
-  if(confirm('선수 명단을 모두 삭제할까요?')){state.players=[];state.schedule=[];saveState();renderAll();}
+  if(confirm('선수 명단을 모두 삭제할까요?')){state.players=[];state.schedule=[];state.fixedPairs={team1:[],team2:[]};saveState();renderAll();}
 });
 $('teamFilter').addEventListener('click',e=>{
   const btn=e.target.closest('button[data-filter]');if(!btn)return;
@@ -130,7 +215,7 @@ function renderPlayers(){
     </div>`).join(''):'<p class="help">등록된 선수가 없습니다.</p>';
   document.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{
     state.players=state.players.filter(p=>p.id!==b.dataset.delete);
-    state.schedule=[];saveState();renderAll();
+    state.schedule=[];normalizeFixedPairs();saveState();renderAll();
   }));
 }
 
@@ -141,6 +226,7 @@ function renderReady(){
   let msg=`선수 ${state.players.length}명 · ${state.settings.courts}코트 · ${state.settings.rounds}라운드`;
   let ok=state.players.length>=4;
   if(teamMode){msg+=` · 팀1 ${t1}명 / 팀2 ${t2}명`;ok=ok&&t1>=2&&t2>=2}
+  if(state.settings.mode==='fixed'){const complete=fixedPairsComplete();ok=ok&&complete;msg+=complete?' · 파트너 설정 완료':' · 파트너 설정 필요'}
   $('readyMessage').textContent=ok?`${msg} · 생성 가능`: `${msg} · 선수 구성을 확인해주세요.`;
   $('generateBtn').disabled=!ok;
   $('generateBtn').style.opacity=ok?'1':'.5';
@@ -150,6 +236,7 @@ function renderReady(){
 $('generateBtn').addEventListener('click',()=>{
   readSettings();
   if(state.schedule.length&&!confirm('기존 대진표를 지우고 다시 만들까요?'))return;
+  state.settings.fixedPairs=cloneData(state.fixedPairs);
   state.schedule=TodayCockSchedule.generate(state.players,state.settings);
   state.currentRoundIndex=0;
   if(!state.schedule.length){toast('현재 설정으로 대진을 만들 수 없습니다. 복식 종류와 인원을 확인해주세요.');return}
@@ -201,17 +288,15 @@ function renderSchedule(){
   $('scheduleCard').classList.remove('hidden');
   $('scheduleList').innerHTML=state.schedule.map((r,ri)=>`
     <div class="round-block"><h4>${r.round}라운드</h4>
-      ${r.matches.map((m,mi)=>`
-        <div class="schedule-match">
-          <strong>${m.court}코트</strong>
-          <select data-player="${ri}|${mi}|1|0">${playerOptions(m.team1[0]?.id,1)}</select>
-          <div class="score-inline"><b>${m.score1===''?'-':m.score1} : ${m.score2===''?'-':m.score2}</b></div>
-          <select data-player="${ri}|${mi}|2|0">${playerOptions(m.team2[0]?.id,2)}</select>
-          <span></span>
-          <select data-player="${ri}|${mi}|1|1">${playerOptions(m.team1[1]?.id,1)}</select>
-          <span></span>
-          <select data-player="${ri}|${mi}|2|1">${playerOptions(m.team2[1]?.id,2)}</select>
-        </div>`).join('')}
+      <div class="schedule-edit-list">${r.matches.map((m,mi)=>`
+        <div class="schedule-edit-card">
+          <div class="schedule-edit-head"><strong>${m.court}코트</strong><span>${m.score1===''?'-':m.score1} : ${m.score2===''?'-':m.score2}</span></div>
+          <div class="schedule-edit-sides">
+            <div class="edit-side"><b>${esc(sideLabel(1))}</b><select data-player="${ri}|${mi}|1|0">${playerOptions(m.team1[0]?.id,1)}</select><select data-player="${ri}|${mi}|1|1">${playerOptions(m.team1[1]?.id,1)}</select></div>
+            <div class="edit-vs">VS</div>
+            <div class="edit-side"><b>${esc(sideLabel(2))}</b><select data-player="${ri}|${mi}|2|0">${playerOptions(m.team2[0]?.id,2)}</select><select data-player="${ri}|${mi}|2|1">${playerOptions(m.team2[1]?.id,2)}</select></div>
+          </div>
+        </div>`).join('')}</div>
     </div>`).join('');
   document.querySelectorAll('[data-player]').forEach(sel=>sel.addEventListener('change',()=>{
     const [ri,mi,side,pos]=sel.dataset.player.split('|').map(Number);
@@ -246,8 +331,13 @@ function renderStats(){
   }));
   const teamMode=['team','fixed'].includes(state.settings.mode);
   $('teamScoreboard').innerHTML=teamMode?`<div class="team-scoreboard"><div class="team-score"><span>${esc(sideLabel(1))}</span><strong>${t1w}승</strong></div><b>VS</b><div class="team-score"><span>${esc(sideLabel(2))}</span><strong>${t2w}승</strong></div></div>`:'';
-  const rows=Object.values(stats).sort((a,b)=>b.games-a.games||b.wins-a.wins).map(s=>`<tr><td>${esc(s.name)}</td><td>${s.games}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.draws}</td></tr>`).join('');
-  $('statsTableWrap').innerHTML=`<table><thead><tr><th>선수</th><th>경기</th><th>승</th><th>패</th><th>무</th></tr></thead><tbody>${rows}</tbody></table>`;
+  const table=(title,rows)=>`<div class="team-stats-block"><h4>${esc(title)}</h4><div class="table-wrap"><table><thead><tr><th>선수</th><th>경기</th><th>승</th><th>패</th><th>무</th><th>승률</th></tr></thead><tbody>${rows.map(s=>`<tr><td>${esc(s.name)}</td><td>${s.games}</td><td>${s.wins}</td><td>${s.losses}</td><td>${s.draws}</td><td>${s.games?Math.round(s.wins/s.games*100):0}%</td></tr>`).join('')}</tbody></table></div></div>`;
+  const all=Object.values(stats).sort((a,b)=>b.games-a.games||b.wins-a.wins);
+  if(teamMode){
+    $('statsTableWrap').innerHTML=`<div class="team-stats-grid">${table(sideLabel(1),all.filter(s=>s.team==='팀1'))}${table(sideLabel(2),all.filter(s=>s.team==='팀2'))}</div>`;
+  }else{
+    $('statsTableWrap').innerHTML=table('전체 선수',all);
+  }
 }
 
 $('exportCsvBtn').addEventListener('click',()=>{
@@ -259,7 +349,7 @@ $('exportCsvBtn').addEventListener('click',()=>{
   a.href=url;a.download='오늘콕_대진표.csv';a.click();URL.revokeObjectURL(url);
 });
 
-function renderAll(){applySettings();renderPlayers();renderReady();renderCurrentRound();renderSchedule();renderOverview();renderStats()}
+function renderAll(){applySettings();normalizeFixedPairs();renderPlayers();renderFixedPartners();renderReady();renderAiAdvice();renderCurrentRound();renderSchedule();renderOverview();renderStats()}
 loadState();renderAll();
 
 const room=new URLSearchParams(location.search).get('room');

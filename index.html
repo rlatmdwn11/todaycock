@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#2f7d57">
   <title>오늘콕 TODAYCOCK 2.0</title>
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260801-fix3">
 </head>
 <body>
   <main id="app">
@@ -16,7 +16,7 @@
         <h1>오늘콕</h1>
         <p class="brand-en">TODAYCOCK</p>
         <p class="brand-sub">배드민턴 대진 매니저</p>
-        <p class="brand-meta">Version 2.0 Final · Fix 1 · Made by 김승주</p>
+        <p class="brand-meta">Version 2.0 Final · Fix 3 · Made by 김승주</p>
         <div class="mode-buttons">
           <button class="btn primary" id="openAdminBtn">운영자 모드</button>
           <button class="btn secondary" id="openViewerBtn">관람 모드</button>
@@ -138,6 +138,35 @@
                 <input id="team2Name" value="팀2">
               </div>
             </div>
+          </div>
+
+          <div id="fixedPartnerPanel" class="sub-panel hidden">
+            <div class="section-head">
+              <div>
+                <h3>고정 파트너 설정</h3>
+                <p>팀별로 두 명씩 한 조로 지정해주세요.</p>
+              </div>
+              <button class="btn secondary compact" id="autoPairBtn" type="button">자동 짝짓기</button>
+            </div>
+            <div class="fixed-team-grid">
+              <div>
+                <h4 id="fixedTeam1Title">팀1</h4>
+                <div id="fixedTeam1Pairs" class="fixed-pair-list"></div>
+              </div>
+              <div>
+                <h4 id="fixedTeam2Title">팀2</h4>
+                <div id="fixedTeam2Pairs" class="fixed-pair-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ai-helper">
+            <div>
+              <span class="ai-label">AI 대진 도우미</span>
+              <strong id="aiAdviceTitle">선수와 경기 설정을 분석해드려요.</strong>
+              <p id="aiAdviceText">선수를 등록하면 경기 수 균형과 필요한 설정을 안내합니다.</p>
+            </div>
+            <button class="btn secondary compact" id="aiAnalyzeBtn" type="button">AI 분석</button>
           </div>
         </section>
 
@@ -351,19 +380,26 @@
   <div id="toast" role="status" aria-live="polite"></div>
 
 
-  <script src="firebase-config.js"></script>
+  <script src="firebase-config.js?v=20260801-fix3"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
-  <script src="firebase.js"></script>
-  <script src="schedule.js"></script>
-  <script src="app.js"></script>
-  <script>
-    if('serviceWorker' in navigator){
-      window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(console.error));
-    }
-  </script>
+  <script src="firebase.js?v=20260801-fix3"></script>
+  <script src="schedule.js?v=20260801-fix3"></script>
+  <script src="app.js?v=20260801-fix3"></script>
+  
+<script>
+(function(){
+if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}
+if('caches' in window){caches.keys().then(function(ks){ks.forEach(function(k){if(k.indexOf('todaycock')!==-1)caches.delete(k);});}).catch(function(){});}
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var t=document.getElementById(id);if(t)t.classList.add('active');window.scrollTo(0,0);}
+var a=document.getElementById('openAdminBtn');if(a)a.addEventListener('click',function(){var c=document.getElementById('adminCode');var n=document.getElementById('nickname');var e=document.getElementById('adminError');if(c)c.value='';if(n)n.value=localStorage.getItem('todaycock2_nickname')||'';if(e)e.textContent='';show('adminLoginScreen');});
+var v=document.getElementById('openViewerBtn');if(v)v.addEventListener('click',function(){var r=document.getElementById('roomCode');var e=document.getElementById('viewerError');if(r)r.value='';if(e)e.textContent='';show('viewerCodeScreen');});
+document.querySelectorAll('[data-back]').forEach(function(b){b.addEventListener('click',function(){show(b.getAttribute('data-back'));});});
+window.addEventListener('error',function(ev){console.error('TODAYCOCK runtime error:',ev.error||ev.message);});
+})();
+</script>
 </body>
 </html>
