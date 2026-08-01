@@ -7,5 +7,3 @@ window.TODAYCOCK_FIREBASE_CONFIG = {
   messagingSenderId: "272533637212",
   appId: "1:272533637212:web:a4d8df5b15e806c035fe99"
 };
-
-window.TODAYCOCK_ADMIN_UID = "gl3RQYerLaPZJSyX6ZGeSCudWIF2";
