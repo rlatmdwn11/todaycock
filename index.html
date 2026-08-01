@@ -753,6 +753,106 @@
       }
     }
 
+
+    /* v2.6 compact roster and match progress */
+    .player{
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) auto auto auto auto !important;
+      align-items:center !important;
+      gap:6px !important;
+      min-height:48px !important;
+      padding:8px 10px !important;
+    }
+    .player-main-row{
+      display:contents !important;
+    }
+    .player-name-wrap{
+      min-width:0;
+      display:block;
+    }
+    .player-name-wrap b{
+      display:block;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:15px;
+    }
+    .player-badges{
+      display:contents !important;
+    }
+    .player-badges .badge{
+      min-height:25px !important;
+      padding:3px 7px !important;
+      font-size:11px !important;
+      white-space:nowrap;
+    }
+    .player-delete-btn{
+      min-height:29px !important;
+      height:29px !important;
+      padding:0 8px !important;
+      font-size:11px !important;
+      border-radius:8px !important;
+      white-space:nowrap;
+    }
+
+    .progress-panel{
+      margin:0 0 14px;
+      padding:13px 14px;
+      border:1px solid var(--line);
+      border-radius:15px;
+      background:#f7fbf8;
+    }
+    .progress-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .progress-head strong{font-size:14px}
+    .progress-head span{
+      font-size:13px;
+      font-weight:800;
+      color:var(--green);
+    }
+    .progress-track{
+      width:100%;
+      height:10px;
+      overflow:hidden;
+      border-radius:999px;
+      background:#dfeae2;
+    }
+    .progress-fill{
+      height:100%;
+      width:0;
+      border-radius:999px;
+      background:var(--green);
+      transition:width .25s ease;
+    }
+    .progress-caption{
+      margin-top:7px;
+      color:#6d7b73;
+      font-size:12px;
+      text-align:right;
+    }
+
+    @media(max-width:430px){
+      .player{
+        grid-template-columns:minmax(72px,1fr) auto auto auto auto !important;
+        gap:4px !important;
+        padding:8px !important;
+      }
+      .player-name-wrap b{font-size:14px}
+      .player-badges .badge{
+        padding:3px 5px !important;
+        font-size:10px !important;
+      }
+      .player-delete-btn{
+        padding:0 6px !important;
+        font-size:10px !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -773,7 +873,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v2.5</h2>
+      <h2>오늘콕 v2.6</h2>
       <span class="v2-badge">Made by 김승주 · 안산시</span>
     </div>
 
@@ -926,6 +1026,16 @@
         <button class="tab" data-tab="stats" onclick="showTab('stats')">참가 통계</button>
       </div>
       <div id="scheduleTab">
+        <div id="matchProgress" class="progress-panel hidden">
+          <div class="progress-head">
+            <strong>🏸 팀전 진행률</strong>
+            <span id="progressCount">0 / 0 경기</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-caption" id="progressPercent">0%</div>
+        </div>
         <div class="actions no-print" style="justify-content:flex-end;margin-top:0">
           <button class="ghost" onclick="window.print()">인쇄 / PDF</button>
           <button class="secondary" onclick="exportCSV()">엑셀용 CSV</button>
@@ -1262,8 +1372,24 @@ function exportOverviewCSV(){
   downloadBlob(csv,'오늘콕_한눈에보기.csv','text/csv;charset=utf-8');
 }
 
+
+function renderProgress(){
+  const panel=document.getElementById('matchProgress');
+  if(!panel)return;
+
+  const matches=schedule.flatMap(r=>r.matches);
+  const total=matches.length;
+  const completed=matches.filter(m=>m.score1!==''&&m.score2!=='').length;
+  const percent=total?Math.round((completed/total)*100):0;
+
+  panel.classList.toggle('hidden',total===0);
+  progressCount.textContent=`${completed} / ${total} 경기`;
+  progressFill.style.width=`${percent}%`;
+  progressPercent.textContent=`${percent}% 완료`;
+}
+
 function renderSchedule(){
-  if(!schedule.length){scheduleArea.className='empty';scheduleArea.innerHTML='선수 명단을 입력한 뒤 ‘대진표 만들기’를 눌러주세요.';statsArea.innerHTML='대진표를 만들면 선수별 경기 수가 표시됩니다.';overviewArea.className='empty';overviewArea.innerHTML='대진표를 만들면 전체 경기가 한 장의 표로 표시됩니다.';return}
+  if(!schedule.length){scheduleArea.className='empty';scheduleArea.innerHTML='선수 명단을 입력한 뒤 ‘대진표 만들기’를 눌러주세요.';statsArea.innerHTML='대진표를 만들면 선수별 경기 수가 표시됩니다.';overviewArea.className='empty';overviewArea.innerHTML='대진표를 만들면 전체 경기가 한 장의 표로 표시됩니다.';renderProgress();return}
   scheduleArea.className='';
   scheduleArea.innerHTML=schedule.map((r,ri)=>`<div class="round">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -1313,8 +1439,15 @@ function renderSchedule(){
     </div>`).join('');
   renderStats();
   renderOverview();
+  renderProgress();
 }
-function setScore(ri,mi,team,val){schedule[ri].matches[mi]['score'+team]=val;localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));renderStats()}
+function setScore(ri,mi,team,val){
+  schedule[ri].matches[mi]['score'+team]=val;
+  localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));
+  renderStats();
+  renderOverview();
+  renderProgress();
+}
 function renderStats(){
   const stats={};
   const teamTotals={
