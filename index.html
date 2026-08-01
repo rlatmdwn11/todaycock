@@ -432,6 +432,147 @@
       }
     }
 
+
+    /* v2.3 team mode */
+    .event-option-check{
+      margin-top:16px;
+      padding:12px 14px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#f7fbf8;
+    }
+    #eventInfoFields.is-disabled{opacity:.5}
+    #eventInfoFields input:disabled{
+      background:#f1f4f2;
+      color:#89938d;
+    }
+    .fixed-partner-box{
+      margin-top:16px;
+      padding:14px;
+      border:1px solid var(--line);
+      border-radius:16px;
+      background:#f8fbf9;
+    }
+    .section-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .partner-team{margin-top:14px}
+    .partner-team h4{margin:0 0 8px;color:var(--green)}
+    .partner-row{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      align-items:center;
+      gap:8px;
+      margin-bottom:8px;
+    }
+    .partner-row select{height:44px;min-height:44px}
+    .partner-link{font-weight:900;color:var(--green)}
+    .roster-toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+    .roster-filter{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+    .roster-filter-btn{
+      min-height:38px;
+      height:38px;
+      padding:0 11px;
+      font-size:13px;
+      background:#edf5ef;
+      color:var(--green);
+    }
+    .roster-filter-btn.active{
+      background:var(--green);
+      color:white;
+    }
+    .schedule-mobile-list{display:none}
+    .schedule-match-card{
+      border:1px solid var(--line);
+      border-radius:15px;
+      background:white;
+      padding:12px;
+      margin-bottom:10px;
+    }
+    .schedule-card-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      margin-bottom:10px;
+    }
+    .schedule-team{
+      display:grid;
+      grid-template-columns:70px minmax(0,1fr);
+      gap:8px;
+      align-items:center;
+      padding:8px 0;
+      border-top:1px solid #eef3ef;
+    }
+    .schedule-team:first-of-type{border-top:0}
+    .schedule-team-label{font-weight:900;color:var(--green)}
+    .schedule-team-controls{display:grid;gap:6px}
+    .schedule-team-controls select{height:42px;min-height:42px}
+    .schedule-score-row{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      align-items:center;
+      gap:8px;
+      margin-top:10px;
+    }
+    .schedule-score-row input{height:42px;min-height:42px;text-align:center}
+    .overview-cards{display:none}
+    .overview-card{
+      border:1px solid var(--line);
+      border-radius:15px;
+      background:white;
+      padding:12px;
+      margin-bottom:10px;
+    }
+    .overview-card-head{
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:8px;
+      font-weight:900;
+      color:var(--green);
+    }
+    .overview-versus{
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      align-items:center;
+      gap:8px;
+      text-align:center;
+    }
+    .overview-versus .side{
+      padding:10px 8px;
+      border-radius:12px;
+      background:#f6faf7;
+      word-break:keep-all;
+    }
+    @media(max-width:760px){
+      .match-table.desktop-schedule{display:none}
+      .schedule-mobile-list{display:block}
+      .overview-wrap{display:none}
+      .overview-cards{display:block}
+      .partner-row{grid-template-columns:1fr}
+      .partner-link{text-align:center}
+      .roster-toolbar{align-items:stretch}
+      .roster-toolbar > *{width:100%}
+      .roster-filter{display:grid;grid-template-columns:repeat(3,1fr)}
+      .roster-filter-btn{width:100%}
+    }
+
 </style>
 </head>
 <body>
@@ -452,26 +593,30 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v2.2</h2>
+      <h2>오늘콕 v2.3</h2>
       <span class="v2-badge">Made by 김승주 · 안산시</span>
     </div>
 
     <div class="menu-grid">
       <button class="menu-btn" onclick="goSection('playersCard')">👥 선수관리</button>
-      <button class="menu-btn" onclick="goSection('setupCard')">🤝 교류전 만들기</button>
+      <button class="menu-btn" onclick="goSection('setupCard')">🤝 팀전 만들기</button>
       <button class="menu-btn" onclick="showTab('overview');goSection('resultCard')">📋 한눈에 보기</button>
       <button class="menu-btn" onclick="openHistory()">📅 지난 경기</button>
       <button class="menu-btn" onclick="openShare()">📱 설치 공유</button>
     </div>
 
-    <div class="event-info-grid">
-      <div><label>교류전 이름</label><input id="eventName" placeholder="예: 오늘콕 vs 셔틀퀸"></div>
-      <div><label>날짜</label><input id="eventDate" type="date"></div>
-      <div><label>팀1 이름</label><input id="team1Name" placeholder="팀1"></div>
-      <div><label>팀2 이름</label><input id="team2Name" placeholder="팀2"></div>
+    <label class="form-check event-option-check">
+      <input class="form-check-input" id="useEventInfo" type="checkbox" onchange="toggleEventInfo()">
+      <span class="form-check-label">팀전 이름·날짜·팀 이름 설정하기</span>
+    </label>
+    <div class="event-info-grid" id="eventInfoFields">
+      <div><label>팀전 이름</label><input id="eventName" placeholder="예: 오늘콕 vs 셔틀퀸" disabled></div>
+      <div><label>날짜</label><input id="eventDate" type="date" disabled></div>
+      <div><label>팀1 이름</label><input id="team1Name" placeholder="팀1" disabled></div>
+      <div><label>팀2 이름</label><input id="team2Name" placeholder="팀2" disabled></div>
     </div>
     <div class="actions">
-      <button class="secondary" onclick="saveEventInfo()">교류전 정보 저장</button>
+      <button class="secondary" onclick="saveEventInfo()">팀전 정보 저장</button>
       <button class="primary" onclick="saveCurrentEvent()">현재 경기 보관</button>
       <button class="ghost" onclick="openLockSettings()">잠금 설정</button>
     </div>
@@ -530,8 +675,8 @@
       <h2>경기 설정</h2>
       <div class="row">
         <div><label>경기 종류</label><select id="matchType"><option>여복</option><option>남복</option><option>혼복</option></select></div>
-        <div><label>대진 방식</label><select id="method">
-          <option value="interteam" selected>팀1 vs 팀2 교류전</option>
+        <div><label>대진 방식</label><select id="method" onchange="toggleFixedPartnerBox()">
+          <option value="interteam" selected>팀1 vs 팀2 팀전</option>
           <option value="balanced">모임 내 균형 순환</option>
           <option value="random">완전 랜덤 대진</option>
           <option value="fixed">고정 파트너 팀전</option>
@@ -546,6 +691,18 @@
         <div><label>급수 섞기</label><select id="gradeRule"><option value="balance">급수 균형 우선</option><option value="random">급수 무관</option></select></div>
         <div><label>같은 파트너 반복</label><select id="repeatRule"><option value="avoid">최대한 피하기</option><option value="allow">허용</option></select></div>
       </div>
+
+      <div id="fixedPartnerBox" class="fixed-partner-box hidden">
+        <div class="section-head">
+          <div>
+            <b>고정 파트너 설정</b>
+            <div class="muted">각 팀에서 두 명씩 짝을 지정해주세요.</div>
+          </div>
+          <button class="secondary small-btn" type="button" onclick="autoPairPartners()">자동 짝짓기</button>
+        </div>
+        <div id="fixedPartnerList"></div>
+      </div>
+
       <div class="actions">
         <button class="primary" onclick="generateSchedule()">대진표 만들기</button>
         <button class="secondary" onclick="saveSettings()">설정 저장</button>
@@ -568,6 +725,16 @@
         <button class="ghost" onclick="exportRoster()">명단 내보내기</button>
         <label class="ghost" style="padding:10px 14px;cursor:pointer">명단 불러오기<input type="file" accept=".json" onchange="importRoster(event)" style="display:none"></label>
       </div>
+
+      <div class="roster-toolbar">
+        <div class="roster-filter" role="group" aria-label="명단 필터">
+          <button type="button" class="roster-filter-btn active" data-filter="all" onclick="setRosterFilter('all')">전체 명단</button>
+          <button type="button" class="roster-filter-btn" data-filter="팀1" onclick="setRosterFilter('팀1')">팀1 명단</button>
+          <button type="button" class="roster-filter-btn" data-filter="팀2" onclick="setRosterFilter('팀2')">팀2 명단</button>
+        </div>
+        <button type="button" class="danger small-btn" onclick="clearAllPlayers()">명단 전체삭제</button>
+      </div>
+
       <div class="summary" id="playerSummary"></div>
       <div class="player-list" id="playerList"></div>
     </section>
@@ -615,9 +782,11 @@ function addPlayer(){
 function removePlayer(id){players=players.filter(p=>p.id!==id);savePlayers()}
 function renderPlayers(){
   const box=document.getElementById('playerList');
-  playerSummary.innerHTML=`<span>전체 ${players.length}명</span><span>팀1 ${players.filter(p=>p.team==='팀1').length}명</span><span>팀2 ${players.filter(p=>p.team==='팀2').length}명</span><span>여 ${players.filter(p=>p.gender==='여').length}명</span><span>남 ${players.filter(p=>p.gender==='남').length}명</span>`;
-  if(!players.length){box.innerHTML='<div class="empty">아직 등록된 선수가 없습니다.</div>';return}
-  box.innerHTML=players.map((p,i)=>`<div class="player"><b>${i+1}. ${esc(p.name)}</b><span class="badge">${p.team}</span><span class="badge">${p.gender}</span><span class="badge">${p.grade}급</span><button class="danger" onclick="removePlayer('${p.id}')">삭제</button></div>`).join('');
+  playerSummary.innerHTML=`<span>전체 ${players.length}명</span><span>팀1 ${players.filter(p=>(p.team||'팀1')==='팀1').length}명</span><span>팀2 ${players.filter(p=>p.team==='팀2').length}명</span><span>여 ${players.filter(p=>p.gender==='여').length}명</span><span>남 ${players.filter(p=>p.gender==='남').length}명</span>`;
+  const visible=rosterFilter==='all'?players:players.filter(p=>(p.team||'팀1')===rosterFilter);
+  if(!visible.length){box.innerHTML='<div class="empty">표시할 선수가 없습니다.</div>';renderFixedPartnerList();return}
+  box.innerHTML=visible.map((p)=>`<div class="player"><b>${esc(p.name)}</b><span class="badge">${p.team||'팀1'}</span><span class="badge">${p.gender}</span><span class="badge">${p.grade}급</span><button class="danger" onclick="removePlayer('${p.id}')">삭제</button></div>`).join('');
+  renderFixedPartnerList();
 }
 function addSample(){
   if(players.length && !confirm('현재 명단 뒤에 가상 명단을 추가할까요?'))return;
@@ -749,28 +918,35 @@ function generateRandom(opts){
   } return result;
 }
 function generateFixed(opts){
-  let pool=eligible(), teams=[];
-  if(opts.matchType==='혼복'){
-    let ws=shuffle(pool.filter(p=>p.gender==='여')),ms=shuffle(pool.filter(p=>p.gender==='남'));
-    while(ws.length&&ms.length)teams.push([ws.shift(),ms.shift()]);
-  }else{
-    pool=shuffle(pool);while(pool.length>=2)teams.push([pool.shift(),pool.shift()]);
+  const chosen=getFixedTeams();
+  let teams=chosen.length?chosen:[];
+  if(!teams.length){
+    let pool=eligible();
+    if(opts.matchType==='혼복'){
+      let ws=shuffle(pool.filter(p=>p.gender==='여')),ms=shuffle(pool.filter(p=>p.gender==='남'));
+      while(ws.length&&ms.length)teams.push([ws.shift(),ms.shift()]);
+    }else{
+      pool=shuffle(pool);while(pool.length>=2)teams.push([pool.shift(),pool.shift()]);
+    }
   }
-  const result=[];let made=0, rotation=1;
+  const team1Teams=teams.filter(t=>(t[0].team||'팀1')==='팀1');
+  const team2Teams=teams.filter(t=>(t[0].team||'팀1')==='팀2');
+  const result=[];let made=0,rotation=1;
   while(made<opts.targetGames&&rotation<=opts.rounds){
-    const order=shuffle(teams),matches=[];
-    for(let c=1;c<=opts.courts&&order.length>=2&&made<opts.targetGames;c++){
-      matches.push({court:c,team1:order.shift(),team2:order.shift(),score1:'',score2:''});made++;
+    const a=shuffle(team1Teams),b=shuffle(team2Teams),matches=[];
+    for(let c=1;c<=opts.courts&&a.length&&b.length&&made<opts.targetGames;c++){
+      matches.push({court:c,team1:a.shift(),team2:b.shift(),score1:'',score2:''});made++;
     }
     if(matches.length)result.push({round:rotation,matches});rotation++;
-  } return result;
+  }
+  return result;
 }
 function generateSchedule(){
   const opts=settings(), pool=eligible();
   if(pool.length<4)return alert('선택한 경기 종류에 맞는 선수가 최소 4명 필요합니다.');
-  if(opts.method==='interteam'&&(byTeam('팀1').length<2||byTeam('팀2').length<2))return alert('교류전은 팀1과 팀2에 각각 최소 2명이 필요합니다.');
+  if(opts.method==='interteam'&&(byTeam('팀1').length<2||byTeam('팀2').length<2))return alert('팀전은 팀1과 팀2에 각각 최소 2명이 필요합니다.');
   if(opts.matchType==='혼복'&&(pool.filter(p=>p.gender==='여').length<2||pool.filter(p=>p.gender==='남').length<2))return alert('혼복은 여성 2명, 남성 2명 이상이 필요합니다.');
-  if(opts.method==='interteam'&&opts.matchType==='혼복'&&['팀1','팀2'].some(t=>byTeam(t).filter(p=>p.gender==='여').length<1||byTeam(t).filter(p=>p.gender==='남').length<1))return alert('혼복 교류전은 각 팀에 여성과 남성이 모두 필요합니다.');
+  if(opts.method==='interteam'&&opts.matchType==='혼복'&&['팀1','팀2'].some(t=>byTeam(t).filter(p=>p.gender==='여').length<1||byTeam(t).filter(p=>p.gender==='남').length<1))return alert('혼복 팀전은 각 팀에 여성과 남성이 모두 필요합니다.');
   schedule=opts.method==='interteam'?generateInterteam(opts):opts.method==='random'?generateRandom(opts):opts.method==='fixed'?generateFixed(opts):generateBalanced(opts);
   if(!schedule.length)return alert('현재 조건으로 대진을 만들 수 없습니다. 인원이나 설정을 확인해주세요.');
   localStorage.setItem('todaycock_schedule',JSON.stringify(schedule));renderSchedule();showTab('schedule');
@@ -838,7 +1014,7 @@ function renderOverview(){
   overviewArea.className='';
   overviewArea.innerHTML=`
     <div class="overview-head">
-      <div><b>${esc(eventInfo.name||'배드민턴 교류전')}</b><div class="muted">${esc(eventInfo.date||'')} · ${esc(eventInfo.team1||'팀1')} vs ${esc(eventInfo.team2||'팀2')}</div></div>
+      <div><b>${esc(eventInfo.name||'배드민턴 팀전')}</b><div class="muted">${esc(eventInfo.date||'')} · ${esc(eventInfo.team1||'팀1')} vs ${esc(eventInfo.team2||'팀2')}</div></div>
       <div class="overview-summary">
         <span>총 ${schedule.length}라운드</span>
         <span>총 ${totalMatches}경기</span>
@@ -846,6 +1022,14 @@ function renderOverview(){
         <span>결과 입력 ${scored}/${totalMatches}</span>
       </div>
     </div>
+    <div class="overview-cards">${rows.map(row=>`<div class="overview-card">
+      <div class="overview-card-head"><span>${row.round}라운드</span><span>${row.court}코트</span></div>
+      <div class="overview-versus">
+        <div class="side">${esc(row.team1)}</div>
+        <div class="overview-score">${row.score}</div>
+        <div class="side">${esc(row.team2)}</div>
+      </div>
+    </div>`).join('')}</div>
     <div class="overview-wrap">
       <table class="overview-table">
         <thead><tr><th>라운드</th><th>코트</th><th>팀1 선수</th><th>점수</th><th>팀2 선수</th></tr></thead>
@@ -882,7 +1066,7 @@ function renderSchedule(){
       <h3>${r.round}라운드</h3>
       <button class="secondary small-btn no-print" onclick="addBlankMatch(${ri})">경기 추가</button>
     </div>
-    <table class="match-table"><thead><tr><th>코트</th><th>팀1 선수</th><th>점수</th><th>팀2 선수</th><th>점수</th><th class="no-print">수정</th></tr></thead>
+    <table class="match-table desktop-schedule"><thead><tr><th>코트</th><th>팀1 선수</th><th>점수</th><th>팀2 선수</th><th>점수</th><th class="no-print">수정</th></tr></thead>
     <tbody>${r.matches.map((m,mi)=>`<tr>
       <td><input class="score" type="number" min="1" value="${m.court}" onchange="changeCourt(${ri},${mi},this.value)"></td>
       <td>
@@ -896,7 +1080,33 @@ function renderSchedule(){
       </td>
       <td><input class="score" type="number" value="${m.score2}" onchange="setScore(${ri},${mi},2,this.value)"></td>
       <td class="no-print"><div class="edit-actions"><button class="danger small-btn" onclick="deleteMatch(${ri},${mi})">삭제</button></div></td>
-    </tr>`).join('')}</tbody></table></div>`).join('');
+    </tr>`).join('')}</tbody></table>
+    <div class="schedule-mobile-list">${r.matches.map((m,mi)=>`<div class="schedule-match-card">
+      <div class="schedule-card-head">
+        <b>${r.round}라운드 · ${m.court}코트</b>
+        <button class="danger small-btn no-print" onclick="deleteMatch(${ri},${mi})">삭제</button>
+      </div>
+      <div class="schedule-team">
+        <div class="schedule-team-label">팀1</div>
+        <div class="schedule-team-controls">
+          <select onchange="changeMatchPlayer(${ri},${mi},1,0,this.value)">${playerOptions(m.team1[0].id,'팀1')}</select>
+          <select onchange="changeMatchPlayer(${ri},${mi},1,1,this.value)">${playerOptions(m.team1[1].id,'팀1')}</select>
+        </div>
+      </div>
+      <div class="schedule-team">
+        <div class="schedule-team-label">팀2</div>
+        <div class="schedule-team-controls">
+          <select onchange="changeMatchPlayer(${ri},${mi},2,0,this.value)">${playerOptions(m.team2[0].id,'팀2')}</select>
+          <select onchange="changeMatchPlayer(${ri},${mi},2,1,this.value)">${playerOptions(m.team2[1].id,'팀2')}</select>
+        </div>
+      </div>
+      <div class="schedule-score-row">
+        <input type="number" value="${m.score1}" placeholder="팀1 점수" onchange="setScore(${ri},${mi},1,this.value)">
+        <b>:</b>
+        <input type="number" value="${m.score2}" placeholder="팀2 점수" onchange="setScore(${ri},${mi},2,this.value)">
+      </div>
+    </div>`).join('')}</div>
+    </div>`).join('');
   renderStats();
   renderOverview();
 }
@@ -978,6 +1188,120 @@ function resetAll(){
 }
 document.getElementById('playerName').addEventListener('keydown',e=>{if(e.key==='Enter')addPlayer()});
 
+
+let rosterFilter='all';
+let fixedPartners=JSON.parse(localStorage.getItem('todaycock_fixed_partners')||'{}');
+
+function toggleEventInfo(){
+  const enabled=useEventInfo.checked;
+  [eventName,eventDate,team1Name,team2Name].forEach(el=>el.disabled=!enabled);
+  eventInfoFields.classList.toggle('is-disabled',!enabled);
+  eventInfo.enabled=enabled;
+  localStorage.setItem('todaycock_event_info',JSON.stringify(eventInfo));
+}
+function setRosterFilter(filter){
+  rosterFilter=filter;
+  document.querySelectorAll('.roster-filter-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.filter===filter));
+  renderPlayers();
+}
+function clearAllPlayers(){
+  if(!players.length)return alert('삭제할 선수가 없습니다.');
+  if(!confirm('선수 명단 전체를 삭제할까요? 저장된 대진표도 함께 초기화됩니다.'))return;
+  players=[];
+  schedule=[];
+  fixedPartners={};
+  localStorage.removeItem('todaycock_players');
+  localStorage.removeItem('todaycock_schedule');
+  localStorage.removeItem('todaycock_fixed_partners');
+  renderPlayers();
+  renderSchedule();
+  renderFixedPartnerList();
+}
+function toggleFixedPartnerBox(){
+  const show=method.value==='fixed';
+  fixedPartnerBox.classList.toggle('hidden',!show);
+  if(show)renderFixedPartnerList();
+}
+function teamPlayers(team){
+  return players.filter(p=>(p.team||'팀1')===team);
+}
+function renderFixedPartnerList(){
+  if(!document.getElementById('fixedPartnerList'))return;
+  const makeTeam=(team)=>{
+    const list=teamPlayers(team);
+    if(list.length<2)return `<div class="partner-team"><h4>${team}</h4><div class="muted">선수가 2명 이상 필요합니다.</div></div>`;
+    const rows=[];
+    const used=new Set();
+    for(const p of list){
+      if(used.has(p.id))continue;
+      const mateId=fixedPartners[p.id];
+      const mate=list.find(x=>x.id===mateId && !used.has(x.id));
+      rows.push([p,mate||null]);
+      used.add(p.id);
+      if(mate)used.add(mate.id);
+    }
+    return `<div class="partner-team"><h4>${team}</h4>${rows.map((pair,idx)=>`
+      <div class="partner-row">
+        <select onchange="setFixedPartner('${team}',${idx},0,this.value)">
+          ${list.map(p=>`<option value="${p.id}" ${pair[0]?.id===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}
+        </select>
+        <span class="partner-link">↔</span>
+        <select onchange="setFixedPartner('${team}',${idx},1,this.value)">
+          <option value="">파트너 선택</option>
+          ${list.map(p=>`<option value="${p.id}" ${pair[1]?.id===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}
+        </select>
+      </div>`).join('')}</div>`;
+  };
+  fixedPartnerList.innerHTML=makeTeam('팀1')+makeTeam('팀2');
+}
+function setFixedPartner(team,rowIndex,pos,playerId){
+  const list=teamPlayers(team);
+  const pairs=[];
+  const used=new Set();
+  for(const p of list){
+    if(used.has(p.id))continue;
+    const mateId=fixedPartners[p.id];
+    const mate=list.find(x=>x.id===mateId && !used.has(x.id));
+    pairs.push([p,mate||null]);
+    used.add(p.id);if(mate)used.add(mate.id);
+  }
+  pairs[rowIndex][pos]=list.find(p=>p.id===playerId)||null;
+  fixedPartners={};
+  for(const [a,b] of pairs){
+    if(a&&b&&a.id!==b.id){
+      fixedPartners[a.id]=b.id;
+      fixedPartners[b.id]=a.id;
+    }
+  }
+  localStorage.setItem('todaycock_fixed_partners',JSON.stringify(fixedPartners));
+  renderFixedPartnerList();
+}
+function autoPairPartners(){
+  fixedPartners={};
+  for(const team of ['팀1','팀2']){
+    const list=teamPlayers(team);
+    for(let i=0;i+1<list.length;i+=2){
+      fixedPartners[list[i].id]=list[i+1].id;
+      fixedPartners[list[i+1].id]=list[i].id;
+    }
+  }
+  localStorage.setItem('todaycock_fixed_partners',JSON.stringify(fixedPartners));
+  renderFixedPartnerList();
+}
+function getFixedTeams(){
+  const teams=[];
+  const seen=new Set();
+  for(const p of players){
+    if(seen.has(p.id))continue;
+    const mate=players.find(x=>x.id===fixedPartners[p.id]);
+    if(mate && mate.team===p.team && mate.id!==p.id){
+      teams.push([p,mate]);
+      seen.add(p.id);seen.add(mate.id);
+    }
+  }
+  return teams;
+}
+
 const SHARE_URL='https://rlatmdwn11.github.io/todaycock/';
 let eventInfo=JSON.parse(localStorage.getItem('todaycock_event_info')||'{}');
 let eventHistory=JSON.parse(localStorage.getItem('todaycock_history')||'[]');
@@ -997,20 +1321,23 @@ function copyShareAddress(){
   }
 }
 function loadEventInfo(){
+  useEventInfo.checked=!!eventInfo.enabled;
   eventName.value=eventInfo.name||'';
   eventDate.value=eventInfo.date||new Date().toISOString().slice(0,10);
   team1Name.value=eventInfo.team1||'팀1';
   team2Name.value=eventInfo.team2||'팀2';
+  toggleEventInfo();
 }
 function saveEventInfo(){
   eventInfo={
-    name:eventName.value.trim()||'배드민턴 교류전',
-    date:eventDate.value,
-    team1:team1Name.value.trim()||'팀1',
-    team2:team2Name.value.trim()||'팀2'
+    enabled:useEventInfo.checked,
+    name:useEventInfo.checked?(eventName.value.trim()||'배드민턴 팀전'):'',
+    date:useEventInfo.checked?eventDate.value:'',
+    team1:useEventInfo.checked?(team1Name.value.trim()||'팀1'):'팀1',
+    team2:useEventInfo.checked?(team2Name.value.trim()||'팀2'):'팀2'
   };
   localStorage.setItem('todaycock_event_info',JSON.stringify(eventInfo));
-  alert('교류전 정보를 저장했어요.');
+  alert('팀전 정보를 저장했어요.');
   renderOverview();
   renderStats();
 }
@@ -1027,7 +1354,7 @@ function saveCurrentEvent(){
   eventHistory.unshift(snapshot);
   eventHistory=eventHistory.slice(0,30);
   localStorage.setItem('todaycock_history',JSON.stringify(eventHistory));
-  alert('현재 교류전을 지난 경기에 보관했어요.');
+  alert('현재 팀전을 지난 경기에 보관했어요.');
 }
 function openHistory(){
   const box=document.getElementById('historyList');
@@ -1037,7 +1364,7 @@ function openHistory(){
     box.innerHTML=eventHistory.map((h,i)=>`
       <div class="history-item">
         <div>
-          <b>${esc(h.eventInfo?.name||'교류전')}</b>
+          <b>${esc(h.eventInfo?.name||'팀전')}</b>
           <div class="history-meta">${h.eventInfo?.date||''} · ${h.schedule.reduce((s,r)=>s+r.matches.length,0)}경기</div>
         </div>
         <div class="actions" style="margin:0">
@@ -1093,7 +1420,7 @@ function checkAppLock(){
   if(localStorage.getItem('todaycock_pin'))openModal('unlockModal');
 }
 
-loadSettings();loadEventInfo();renderPlayers();renderSchedule();checkAppLock();
+loadSettings();loadEventInfo();renderPlayers();renderSchedule();toggleFixedPartnerBox();checkAppLock();
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 let deferredInstallPrompt=null;
