@@ -690,6 +690,69 @@
       }
     }
 
+
+    /* v2.5 roster information restoration */
+    .player{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:9px;
+      align-items:center;
+      min-height:auto;
+      padding:12px;
+    }
+    .player-main-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      min-width:0;
+    }
+    .player-name-wrap{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+      flex:1;
+    }
+    .player-name-wrap b{
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:16px;
+    }
+    .player-delete-btn{
+      flex:0 0 auto;
+      min-height:32px !important;
+      height:32px !important;
+      width:auto !important;
+      padding:0 9px !important;
+      font-size:12px !important;
+      border-radius:9px !important;
+    }
+    .player-badges{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+    .player-badges .badge{
+      display:inline-flex !important;
+      align-items:center;
+      justify-content:center;
+      min-height:28px;
+      padding:4px 9px;
+      font-size:12px;
+    }
+    @media(max-width:430px){
+      .player{
+        grid-template-columns:1fr;
+      }
+      .player .badge:nth-of-type(2),
+      .player .badge:nth-of-type(3){
+        display:inline-flex !important;
+      }
+    }
+
 </style>
 </head>
 <body>
@@ -710,7 +773,7 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v2.4</h2>
+      <h2>오늘콕 v2.5</h2>
       <span class="v2-badge">Made by 김승주 · 안산시</span>
     </div>
 
@@ -901,7 +964,9 @@ function renderPlayers(){
   const box=document.getElementById('playerList');
   playerSummary.innerHTML=`<span>전체 ${players.length}명</span><span>팀1 ${players.filter(p=>(p.team||'팀1')==='팀1').length}명</span><span>팀2 ${players.filter(p=>p.team==='팀2').length}명</span><span>여 ${players.filter(p=>p.gender==='여').length}명</span><span>남 ${players.filter(p=>p.gender==='남').length}명</span>`;
 
-  const visible=rosterFilter==='all'?players:players.filter(p=>(p.team||'팀1')===rosterFilter);
+  const visible=rosterFilter==='all'
+    ? players
+    : players.filter(p=>(p.team||'팀1')===rosterFilter);
 
   if(!visible.length){
     box.innerHTML='<div class="empty">표시할 선수가 없습니다.</div>';
@@ -911,13 +976,17 @@ function renderPlayers(){
 
   box.innerHTML=visible.map(p=>`
     <div class="player">
-      <div class="player-name-wrap">
-        <b>${esc(p.name)}</b>
+      <div class="player-main-row">
+        <div class="player-name-wrap">
+          <b>${esc(p.name)}</b>
+        </div>
         <button class="danger player-delete-btn" onclick="removePlayer('${p.id}')">삭제</button>
       </div>
-      <span class="badge">${p.team||'팀1'}</span>
-      <span class="badge">${p.gender}</span>
-      <span class="badge">${p.grade}급</span>
+      <div class="player-badges">
+        <span class="badge">${p.team||'팀1'}</span>
+        <span class="badge">${p.gender}</span>
+        <span class="badge">${p.grade}급</span>
+      </div>
     </div>
   `).join('');
 
