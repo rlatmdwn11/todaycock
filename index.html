@@ -952,10 +952,107 @@
       .estimate-grid{grid-template-columns:1fr 1fr}
     }
 
+
+    /* v4.0 branded launch screen */
+    .v4-splash{
+      position:fixed;
+      inset:0;
+      z-index:10000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:22px;
+      background:#f4f9f2;
+    }
+    .v4-splash.hidden{display:none}
+    .v4-splash-card{
+      width:min(420px,100%);
+      padding:28px 22px;
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:white;
+      text-align:center;
+      box-shadow:0 18px 42px rgba(38,80,54,.12);
+    }
+    .v4-mark{
+      width:72px;
+      height:72px;
+      display:grid;
+      place-items:center;
+      margin:0 auto 14px;
+      border-radius:22px;
+      background:#e8f4ec;
+      font-size:34px;
+    }
+    .v4-ko-title{
+      margin:0;
+      color:var(--green);
+      font-size:34px;
+      letter-spacing:-2px;
+      font-weight:900;
+    }
+    .v4-en-title{
+      margin-top:3px;
+      color:#476155;
+      font-size:17px;
+      letter-spacing:2px;
+      font-weight:900;
+    }
+    .v4-subtitle{
+      margin-top:16px;
+      color:var(--ink);
+      font-size:18px;
+      font-weight:800;
+    }
+    .v4-version{
+      margin-top:7px;
+      color:#78867e;
+      font-size:13px;
+    }
+    .v4-maker{
+      margin-top:4px;
+      color:#8b9790;
+      font-size:12px;
+    }
+    .v4-mode-buttons{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:24px;
+    }
+    .v4-mode-buttons button{
+      min-height:50px;
+    }
+    .v4-viewer-note{
+      margin-top:12px;
+      color:#7b8881;
+      font-size:12px;
+      line-height:1.5;
+    }
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="firebase-config.js"></script>
 </head>
 <body>
+
+<div class="v4-splash" id="v4Splash">
+  <div class="v4-splash-card">
+    <div class="v4-mark">🏸</div>
+    <h1 class="v4-ko-title">오늘콕</h1>
+    <div class="v4-en-title">TODAYCOCK</div>
+    <div class="v4-subtitle">배드민턴 대진 매니저</div>
+    <div class="v4-version">Version 4.0</div>
+    <div class="v4-maker">Made by 김승주</div>
+
+    <div class="v4-mode-buttons">
+      <button class="primary" type="button" onclick="enterAdminMode()">운영자 모드</button>
+      <button class="secondary" type="button" onclick="openViewerPage()">관람 모드</button>
+    </div>
+    <div class="v4-viewer-note">관람 모드는 공유받은 팀전 코드를 입력해 대진표와 진행률을 읽기 전용으로 보는 화면입니다.</div>
+  </div>
+</div>
+
 <header>
   <div class="logo">오늘콕 <span>🏸</span></div>
   <div class="tag">우리 모임 전용 복식 대진표</div>
@@ -973,8 +1070,8 @@
 <section class="home-panel no-print">
   <div class="home-card">
     <div class="home-title">
-      <h2>오늘콕 v3.0</h2>
-      <span class="v2-badge">Made by 김승주 · 안산시</span>
+      <h2>오늘콕 v4.0</h2>
+      <span class="v2-badge">Made by 김승주</span>
     </div>
 
     <div class="menu-grid">
@@ -1153,6 +1250,28 @@
 
       <div class="summary" id="playerSummary"></div>
       <div class="player-list" id="playerList"></div>
+    </section>
+
+
+    <section class="card full no-print" id="liveShareCard">
+      <h2>실시간 관람 공유</h2>
+      <p class="muted">Firebase 연결 후 운영자가 점수를 입력하면 관람자 화면에 실시간으로 반영됩니다.</p>
+      <div class="row">
+        <div>
+          <label>팀전 공유 코드</label>
+          <input id="liveRoomCode" placeholder="예: KOK-8274" readonly>
+        </div>
+        <div>
+          <label>공유 상태</label>
+          <input id="liveShareStatus" value="Firebase 연결 전" readonly>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="primary" type="button" onclick="startLiveShare()">공유 시작</button>
+        <button class="secondary" type="button" onclick="copyViewerLink()">관람 링크 복사</button>
+        <button class="danger" type="button" onclick="stopLiveShare()">공유 종료</button>
+      </div>
+      <p class="notice">※ 이 버전에는 화면과 구조가 준비되어 있으며, 실제 실시간 공유는 Firebase 설정 후 활성화됩니다.</p>
     </section>
 
     <section class="card full" id="resultCard">
@@ -2133,6 +2252,66 @@ document.addEventListener('DOMContentLoaded',()=>{
 window.addEventListener('appinstalled',()=>{
   const banner=document.getElementById('installBanner');
   if(banner)banner.style.display='none';
+});
+
+
+function enterAdminMode(){
+  document.getElementById('v4Splash').classList.add('hidden');
+  sessionStorage.setItem('todaycock_mode','admin');
+}
+function openViewerPage(){
+  const code=prompt('공유받은 팀전 코드를 입력해주세요.','');
+  if(code===null)return;
+  const clean=code.trim();
+  const url=clean?`viewer.html?room=${encodeURIComponent(clean)}`:'viewer.html';
+  location.href=url;
+}
+function randomRoomCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code='KOK-';
+  for(let i=0;i<4;i++)code+=chars[Math.floor(Math.random()*chars.length)];
+  return code;
+}
+function firebaseReady(){
+  return window.TODAYCOCK_FIREBASE_CONFIG &&
+         window.TODAYCOCK_FIREBASE_CONFIG.apiKey &&
+         !String(window.TODAYCOCK_FIREBASE_CONFIG.apiKey).includes('여기에');
+}
+function startLiveShare(){
+  if(!firebaseReady()){
+    alert('아직 Firebase 설정이 연결되지 않았어요. firebase-config.js에 설정값을 넣은 뒤 사용할 수 있어요.');
+    return;
+  }
+  const code=randomRoomCode();
+  liveRoomCode.value=code;
+  liveShareStatus.value='공유 중';
+  localStorage.setItem('todaycock_live_room',code);
+  alert(`공유 코드 ${code}가 생성됐어요.`);
+}
+function copyViewerLink(){
+  const code=liveRoomCode.value||localStorage.getItem('todaycock_live_room')||'';
+  if(!code)return alert('먼저 공유를 시작해주세요.');
+  const url=`${location.origin}${location.pathname.replace(/index\.html$/,'')}viewer.html?room=${encodeURIComponent(code)}`;
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(url).then(()=>alert('관람 링크를 복사했어요.'));
+  }else{
+    prompt('아래 링크를 복사해주세요.',url);
+  }
+}
+function stopLiveShare(){
+  localStorage.removeItem('todaycock_live_room');
+  liveRoomCode.value='';
+  liveShareStatus.value=firebaseReady()?'공유 종료':'Firebase 연결 전';
+  alert('공유를 종료했어요.');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const savedMode=sessionStorage.getItem('todaycock_mode');
+  if(savedMode==='admin')document.getElementById('v4Splash').classList.add('hidden');
+  const room=localStorage.getItem('todaycock_live_room');
+  if(room){
+    liveRoomCode.value=room;
+    liveShareStatus.value=firebaseReady()?'공유 중':'Firebase 연결 전';
+  }
 });
 
 </script>
