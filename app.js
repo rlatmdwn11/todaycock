@@ -1168,3 +1168,70 @@ document.getElementById('rosterExcelInput')?.addEventListener('change',event=>{
   event.target.value='';
   if(file)importRosterExcelFile(file);
 });
+
+
+// ===== TODAYCOCK 2.1 UI =====
+const FIRST_RUN_GUIDE_KEY='todaycock21_hide_first_guide';
+
+const MATCH_MODE_DESCRIPTIONS={
+  balanced:{
+    icon:'⚖️',
+    title:'모임 내 균형순환',
+    text:'출전 횟수와 파트너·상대를 최대한 균형 있게 자동 배정합니다. 정기모임이나 교류전에 추천합니다.',
+    recommended:true
+  },
+  random:{
+    icon:'🎲',
+    title:'모임 내 완전 랜덤',
+    text:'모든 대진을 무작위로 생성합니다. 출전 횟수와 파트너가 고르지 않을 수 있으며 재미 위주의 모임에 적합합니다.',
+    recommended:false
+  },
+  team:{
+    icon:'🏆',
+    title:'팀1 대 팀2 팀전',
+    text:'팀1과 팀2가 대결하는 단체전 방식입니다. 팀별 승수와 점수가 자동으로 집계됩니다.',
+    recommended:false
+  },
+  fixed:{
+    icon:'🤝',
+    title:'팀 대항 고정 파트너전',
+    text:'지정한 파트너를 끝까지 유지하며 팀 대항전을 진행합니다. 먼저 선수 명단에서 고정 파트너를 설정하세요.',
+    recommended:false
+  }
+};
+
+function updateMatchModeDescription(){
+  const mode=document.getElementById('matchMode')?.value||'balanced';
+  const data=MATCH_MODE_DESCRIPTIONS[mode]||MATCH_MODE_DESCRIPTIONS.balanced;
+  const icon=document.getElementById('matchModeIcon');
+  const title=document.getElementById('matchModeTitle');
+  const text=document.getElementById('matchModeText');
+  const badge=document.getElementById('matchModeRecommended');
+  if(icon)icon.textContent=data.icon;
+  if(title)title.textContent=data.title;
+  if(text)text.textContent=data.text;
+  if(badge)badge.classList.toggle('hidden',!data.recommended);
+}
+
+document.getElementById('matchMode')?.addEventListener('change',updateMatchModeDescription);
+
+document.getElementById('openModeGuideBtn')?.addEventListener('click',()=>{
+  document.getElementById('modeGuideModal')?.classList.add('open');
+});
+document.getElementById('closeModeGuideBtn')?.addEventListener('click',()=>{
+  document.getElementById('modeGuideModal')?.classList.remove('open');
+});
+
+document.getElementById('closeFirstRunGuideBtn')?.addEventListener('click',()=>{
+  if(document.getElementById('hideFirstRunGuide')?.checked){
+    localStorage.setItem(FIRST_RUN_GUIDE_KEY,'1');
+  }
+  document.getElementById('firstRunGuideModal')?.classList.remove('open');
+});
+
+setTimeout(()=>{
+  updateMatchModeDescription();
+  if(localStorage.getItem(FIRST_RUN_GUIDE_KEY)!=='1'){
+    document.getElementById('firstRunGuideModal')?.classList.add('open');
+  }
+},350);

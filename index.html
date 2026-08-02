@@ -20,7 +20,7 @@
         <h1>오늘콕</h1>
         <p class="brand-en">TODAYCOCK</p>
         <p class="brand-sub">배드민턴 대진 매니저</p>
-        <p class="brand-meta">Version 2.0 Stable · Fix 7 · Made by 김승주</p>
+        <p class="brand-meta">Version 2.1 · UI · Made by 김승주</p>
         <div class="mode-buttons">
           <button class="btn primary" id="openAdminBtn">운영자 모드</button>
           <button class="btn secondary" id="openViewerBtn">관람 모드</button>
@@ -61,7 +61,7 @@
     <section class="screen" id="adminMainScreen">
       <header class="app-header">
         <div>
-          <p class="eyebrow">TODAYCOCK 2.0 · FINAL</p>
+          <p class="eyebrow">TODAYCOCK 2.1 · FINAL</p>
           <h2 id="welcomeText">운영자 화면</h2>
         </div>
         <div class="header-actions">
@@ -91,18 +91,34 @@
         <section class="card">
           <div class="section-title">
             <span class="step">1</span>
-            <div><h3>경기 설정</h3><p>대진 방식과 경기 규모를 설정하세요.</p></div>
+            <div class="section-copy">
+              <div class="title-with-help">
+                <h3>경기 설정</h3>
+                <button type="button" class="help-circle" id="openModeGuideBtn" aria-label="대진 방식 안내">?</button>
+              </div>
+              <p>대진 방식과 경기 규모를 설정하세요.</p>
+            </div>
           </div>
 
           <div class="form-grid">
             <div>
               <label for="matchMode">대진 방식</label>
               <select id="matchMode">
-                <option value="balanced">모임 내 균형 순환</option>
+                <option value="balanced">모임 내 균형순환</option>
                 <option value="random">모임 내 완전 랜덤</option>
                 <option value="team">팀1 대 팀2 팀전</option>
                 <option value="fixed">팀 대항 고정 파트너전</option>
               </select>
+
+              <div id="matchModeDescription" class="mode-description">
+                <div class="mode-description-head">
+                  <span id="matchModeIcon">⚖️</span>
+                  <strong id="matchModeTitle">모임 내 균형순환</strong>
+                  <span id="matchModeRecommended" class="recommend-badge">추천</span>
+                </div>
+                <p id="matchModeText">출전 횟수와 파트너·상대를 최대한 균형 있게 자동 배정합니다. 정기모임이나 교류전에 추천합니다.</p>
+              </div>
+
             </div>
             <div>
               <label for="matchType">복식 종류</label>
@@ -433,6 +449,52 @@
         <button class="btn primary" id="continueGameBtn">이어서 진행</button>
       </div>
       <p class="help">새로 시작을 누르면 현재 기기에 자동 저장된 진행 중 데이터가 초기화됩니다. 지난 기록은 유지됩니다.</p>
+    </div>
+  </div>
+
+
+  <div class="modal-backdrop" id="firstRunGuideModal" aria-hidden="true">
+    <div class="modal guide-modal">
+      <div class="guide-logo">🏸</div>
+      <h3>TODAYCOCK 시작하기</h3>
+      <div class="guide-steps">
+        <div class="guide-step"><span>1</span><div><b>경기 설정</b><small>대진 방식, 코트 수, 라운드를 선택하세요.</small></div></div>
+        <div class="guide-step"><span>2</span><div><b>선수 등록</b><small>직접 입력하거나 엑셀 명단을 불러오세요.</small></div></div>
+        <div class="guide-step"><span>3</span><div><b>대진표 만들기</b><small>선택한 조건에 맞춰 자동으로 생성합니다.</small></div></div>
+        <div class="guide-step"><span>4</span><div><b>점수 입력</b><small>현재 라운드에서 결과를 입력하면 통계가 반영됩니다.</small></div></div>
+      </div>
+      <label class="check-row guide-hide-row">
+        <input id="hideFirstRunGuide" type="checkbox">
+        <span>다음부터 보지 않기</span>
+      </label>
+      <button class="btn primary" id="closeFirstRunGuideBtn">시작하기</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modeGuideModal" aria-hidden="true">
+    <div class="modal guide-modal">
+      <div class="section-head">
+        <h3>대진 방식 안내</h3>
+        <button class="icon-btn" id="closeModeGuideBtn">×</button>
+      </div>
+      <div class="mode-guide-list">
+        <div class="mode-guide-item recommended">
+          <span>⚖️</span>
+          <div><b>모임 내 균형순환 <em>추천</em></b><small>출전 횟수와 파트너·상대를 최대한 고르게 배정합니다.</small></div>
+        </div>
+        <div class="mode-guide-item">
+          <span>🎲</span>
+          <div><b>모임 내 완전 랜덤</b><small>모든 대진을 무작위로 생성합니다. 재미 위주의 모임에 적합합니다.</small></div>
+        </div>
+        <div class="mode-guide-item">
+          <span>🏆</span>
+          <div><b>팀1 대 팀2 팀전</b><small>두 팀이 대결하며 팀별 승수와 점수가 자동 집계됩니다.</small></div>
+        </div>
+        <div class="mode-guide-item">
+          <span>🤝</span>
+          <div><b>팀 대항 고정 파트너전</b><small>지정한 파트너를 유지하면서 팀 대항전을 진행합니다.</small></div>
+        </div>
+      </div>
     </div>
   </div>
 
