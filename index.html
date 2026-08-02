@@ -20,7 +20,7 @@
         <h1>오늘콕</h1>
         <p class="brand-en">TODAYCOCK</p>
         <p class="brand-sub">배드민턴 대진 매니저</p>
-        <p class="brand-meta">Version 2.0 Stable · Fix 6 · Made by 김승주</p>
+        <p class="brand-meta">Version 2.0 Stable · Fix 7 · Made by 김승주</p>
         <div class="mode-buttons">
           <button class="btn primary" id="openAdminBtn">운영자 모드</button>
           <button class="btn secondary" id="openViewerBtn">관람 모드</button>
@@ -38,7 +38,7 @@
         <input id="adminCode" type="password" inputmode="numeric" placeholder="운영자 코드를 입력하세요">
         <label for="nickname">닉네임 <span class="optional">선택</span></label>
         <input id="nickname" maxlength="20" placeholder="예: 승주">
-        <p class="help">실시간 관람 공유는 다음 단계에서 연결됩니다.</p>
+        <p class="help">실시간 관람모드를 사용하려면 닉네임을 입력해주세요. 입력하지 않아도 일반 대진 기능은 사용할 수 있어요.</p>
         <p class="error" id="adminError"></p>
         <button class="btn primary" id="startAdminBtn">시작하기</button>
       </div>
@@ -125,6 +125,30 @@
               <label for="targetGames">목표 경기 수 <span class="optional">선택</span></label>
               <input id="targetGames" type="number" min="1" placeholder="비우면 코트×라운드">
             </div>
+          </div>
+
+
+          <div class="generation-options">
+            <div class="generation-options-title">
+              <strong>대진 생성 옵션</strong>
+              <span>원하는 조건만 선택하세요.</span>
+            </div>
+            <label class="option-row">
+              <input id="balanceGrade" type="checkbox" checked>
+              <span><b>급수 균형</b><small>팀 또는 조의 평균 급수가 비슷하게 배정됩니다.</small></span>
+            </label>
+            <label class="option-row">
+              <input id="balanceGames" type="checkbox" checked>
+              <span><b>출전 횟수 균형</b><small>선수별 경기 수 차이를 줄입니다.</small></span>
+            </label>
+            <label class="option-row">
+              <input id="minimizePartners" type="checkbox" checked>
+              <span><b>파트너 중복 최소화</b><small>같은 파트너가 반복되는 횟수를 줄입니다.</small></span>
+            </label>
+            <label class="option-row">
+              <input id="minimizeOpponents" type="checkbox" checked>
+              <span><b>상대 중복 최소화</b><small>같은 상대와 반복해서 만나는 횟수를 줄입니다.</small></span>
+            </label>
           </div>
 
           <label class="check-row">
