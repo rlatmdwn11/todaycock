@@ -1235,3 +1235,24 @@ setTimeout(()=>{
     document.getElementById('firstRunGuideModal')?.classList.add('open');
   }
 },350);
+
+// ===== TODAYCOCK 2.2 =====
+function partialPairOptions(selected=''){
+  return '<option value="">선수 선택</option>'+state.players.map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${escapeHtml(p.name)}${state.settings.showGrades===false?'':` (${escapeHtml(p.grade)})`}</option>`).join('');
+}
+function renderPartialPairs(){
+  const box=document.getElementById('partialPairList'); if(!box)return;
+  const pairs=Array.isArray(state.settings.partialPairs)?state.settings.partialPairs:[];
+  if(!pairs.length){box.innerHTML='<p class="empty">설정된 부분 고정 파트너가 없습니다.</p>';return;}
+  box.innerHTML=pairs.map((x,i)=>`<div class="partial-pair-row" data-partial-index="${i}">
+  <select class="partial-a">${partialPairOptions(x.a)}</select><span class="partial-pair-vs">+</span>
+  <select class="partial-b">${partialPairOptions(x.b)}</select>
+  <label class="partial-pair-count"><input class="partial-count" type="number" min="1" max="99" value="${Math.max(1,Number(x.count)||1)}"><small>경기</small></label>
+  <button type="button" class="partial-pair-remove">×</button></div>`).join('');
+}
+function readPartialPairs(){
+  return [...document.querySelectorAll('.partial-pair-row')].map(r=>({a:r.querySelector('.partial-a')?.value||'',b:r.querySelector('.partial-b')?.value||'',count:Math.max(1,Number(r.querySelector('.partial-count')?.value)||1)})).filter(x=>x.a&&x.b&&x.a!==x.b);
+}
+document.getElementById('addPartialPairBtn')?.addEventListener('click',()=>{state.settings.partialPairs=readPartialPairs();state.settings.partialPairs.push({a:'',b:'',count:1});renderPartialPairs();});
+document.getElementById('partialPairList')?.addEventListener('change',()=>{state.settings.partialPairs=readPartialPairs();saveState();});
+document.getElementById('partialPairList')?.addEventListener('click',e=>{const b=e.target.closest('.partial-pair-remove');if(!b)return;const rows=[...document.querySelectorAll('.partial-pair-row')];const i=rows.indexOf(b.closest('.partial-pair-row'));state.settings.partialPairs=readPartialPairs();if(i>=0)state.settings.partialPairs.splice(i,1);renderPartialPairs();saveState();});

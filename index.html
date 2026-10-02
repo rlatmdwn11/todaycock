@@ -20,7 +20,7 @@
         <h1>오늘콕</h1>
         <p class="brand-en">TODAYCOCK</p>
         <p class="brand-sub">배드민턴 대진 매니저</p>
-        <p class="brand-meta">Version 2.1 · UI · Made by 김승주</p>
+        <p class="brand-meta">Version 2.2 · Made by 김승주</p>
         <div class="mode-buttons">
           <button class="btn primary" id="openAdminBtn">운영자 모드</button>
           <button class="btn secondary" id="openViewerBtn">관람 모드</button>
@@ -61,7 +61,7 @@
     <section class="screen" id="adminMainScreen">
       <header class="app-header">
         <div>
-          <p class="eyebrow">TODAYCOCK 2.1 · FINAL</p>
+          <p class="eyebrow">TODAYCOCK 2.2 · FINAL</p>
           <h2 id="welcomeText">운영자 화면</h2>
         </div>
         <div class="header-actions">
@@ -144,11 +144,18 @@
           </div>
 
 
-          <div class="generation-options">
+          <div class="sub-panel partial-pair-panel" id="partialPairPanel">
+<div class="section-head"><div><h4>부분 고정 파트너</h4><p>일부 선수만 원하는 경기 수만큼 같은 파트너로 배정합니다.</p></div>
+<button type="button" class="btn secondary compact" id="addPartialPairBtn">+ 추가</button></div>
+<div id="partialPairList"></div>
+<p class="help">지정 횟수를 채운 뒤에는 일반 대진 조건에 따라 다른 파트너와 배정될 수 있습니다.</p></div>
+<div class="generation-options">
             <div class="generation-options-title">
               <strong>대진 생성 옵션</strong>
               <span>원하는 조건만 선택하세요.</span>
             </div>
+<label class="option-row"><input id="showGrades" type="checkbox" checked>
+<span><b>대진표에 급수 표시</b><small>운영자가 선택하며 관람모드에도 동일하게 적용됩니다.</small></span></label>
             <label class="option-row">
               <input id="balanceGrade" type="checkbox" checked>
               <span><b>급수 균형</b><small>팀 또는 조의 평균 급수가 비슷하게 배정됩니다.</small></span>

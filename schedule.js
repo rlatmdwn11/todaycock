@@ -135,5 +135,25 @@ window.TodayCockSchedule = (() => {
     return createInternal(players,settings,settings.mode==='random');
   }
 
-  return {generate,validPair};
+  
+  function applyPartialPairs(rounds,settings){
+    const wanted=(settings.partialPairs||[]).filter(x=>x.a&&x.b&&x.a!==x.b&&Number(x.count)>0);
+    const pairCount=(a,b)=>rounds.reduce((n,r)=>n+(r.matches||[]).reduce((q,m)=>q+([[m.a1,m.a2],[m.b1,m.b2]].some(s=>s.includes(a)&&s.includes(b))?1:0),0),0);
+    wanted.forEach(w=>{
+      let need=Number(w.count)-pairCount(w.a,w.b);
+      for(const r of rounds){
+        if(need<=0)break;
+        const ms=r.matches||[]; let A=null,B=null;
+        ms.forEach((m,mi)=>[['a1','a2'],['b1','b2']].forEach(side=>side.forEach(k=>{
+          if(m[k]===w.a)A={m,mi,k,side}; if(m[k]===w.b)B={m,mi,k,side};
+        })));
+        if(!A||!B||A.mi===B.mi)continue;
+        const pk=A.side.find(k=>k!==A.k), old=A.m[pk];
+        A.m[pk]=w.b; B.m[B.k]=old; need--;
+      }
+    });
+    return rounds;
+  }
+
+return {generate,validPair};
 })();

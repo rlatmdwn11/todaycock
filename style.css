@@ -492,3 +492,10 @@ input[type="date"]::-webkit-calendar-picker-indicator{
   font-size:9px;
   font-style:normal
 }
+
+/* TODAYCOCK 2.2 */
+.partial-pair-panel{margin-top:16px}.partial-pair-row{display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr) 90px 38px;gap:7px;align-items:center;margin:8px 0}
+.partial-pair-row select,.partial-pair-row input{width:100%;min-width:0}.partial-pair-vs{text-align:center;font-weight:900;color:var(--muted)}
+.partial-pair-count{display:flex;align-items:center;gap:4px}.partial-pair-count input{text-align:center}
+.partial-pair-remove{width:38px;height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--danger);font-weight:900}
+@media(max-width:560px){.partial-pair-row{grid-template-columns:1fr 24px 1fr}.partial-pair-count{grid-column:1/3}.partial-pair-remove{grid-column:3;grid-row:2;width:100%}}
