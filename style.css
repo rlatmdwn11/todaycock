@@ -503,3 +503,8 @@ input[type="date"]::-webkit-calendar-picker-indicator{
 .player-team-field.mode-hidden{display:none!important}
 .roster-mode-note{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--primary-soft);color:#526158;font-size:12px;line-height:1.5}
 .roster-mode-note strong{color:var(--primary)}
+
+/* 2.2.2: only the team selector is hidden; player registration remains visible */
+.player-team-field{display:block;width:100%;min-width:0}
+.player-team-field>select{width:100%;min-width:0}
+.player-team-field.mode-hidden{display:none!important}
