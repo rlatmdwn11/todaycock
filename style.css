@@ -499,3 +499,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{
 .partial-pair-count{display:flex;align-items:center;gap:4px}.partial-pair-count input{text-align:center}
 .partial-pair-remove{width:38px;height:42px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--danger);font-weight:900}
 @media(max-width:560px){.partial-pair-row{grid-template-columns:1fr 24px 1fr}.partial-pair-count{grid-column:1/3}.partial-pair-remove{grid-column:3;grid-row:2;width:100%}}
+
+.player-team-field.mode-hidden{display:none!important}
+.roster-mode-note{margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--primary-soft);color:#526158;font-size:12px;line-height:1.5}
+.roster-mode-note strong{color:var(--primary)}

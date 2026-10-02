@@ -20,7 +20,7 @@
         <h1>오늘콕</h1>
         <p class="brand-en">TODAYCOCK</p>
         <p class="brand-sub">배드민턴 대진 매니저</p>
-        <p class="brand-meta">Version 2.2 · Made by 김승주</p>
+        <p class="brand-meta">Version 2.2.1 · Made by 김승주</p>
         <div class="mode-buttons">
           <button class="btn primary" id="openAdminBtn">운영자 모드</button>
           <button class="btn secondary" id="openViewerBtn">관람 모드</button>
@@ -236,7 +236,7 @@
             <div><h3>선수 명단</h3><p>선수를 등록하고 팀과 급수를 설정하세요.</p></div>
           </div>
 
-          <div class="player-form-grid">
+          <div class="player-team-field player-form-grid">
             <input id="playerName" placeholder="선수 이름">
             <select id="playerTeam">
               <option value="팀1">팀1</option>
@@ -257,7 +257,8 @@
           </div>
 
 
-          <div class="excel-toolbar">
+          <div id="rosterModeNote" class="roster-mode-note"></div>
+<div class="excel-toolbar">
             <button class="btn secondary compact" id="downloadRosterTemplateBtn">엑셀 양식</button>
             <button class="btn secondary compact" id="importRosterExcelBtn">엑셀 불러오기</button>
             <button class="btn secondary compact" id="exportRosterExcelBtn">명단 내보내기</button>

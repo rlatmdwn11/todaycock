@@ -1256,3 +1256,22 @@ function readPartialPairs(){
 document.getElementById('addPartialPairBtn')?.addEventListener('click',()=>{state.settings.partialPairs=readPartialPairs();state.settings.partialPairs.push({a:'',b:'',count:1});renderPartialPairs();});
 document.getElementById('partialPairList')?.addEventListener('change',()=>{state.settings.partialPairs=readPartialPairs();saveState();});
 document.getElementById('partialPairList')?.addEventListener('click',e=>{const b=e.target.closest('.partial-pair-remove');if(!b)return;const rows=[...document.querySelectorAll('.partial-pair-row')];const i=rows.indexOf(b.closest('.partial-pair-row'));state.settings.partialPairs=readPartialPairs();if(i>=0)state.settings.partialPairs.splice(i,1);renderPartialPairs();saveState();});
+
+// ===== TODAYCOCK 2.2.1: mode-aware team selection =====
+function isTeamMatchMode(){
+  const mode=document.getElementById('matchMode')?.value||state.settings.matchMode||'balanced';
+  return mode==='team'||mode==='fixed';
+}
+function updateRosterTeamUI(){
+  const teamMode=isTeamMatchMode();
+  document.querySelectorAll('.player-team-field').forEach(el=>el.classList.toggle('mode-hidden',!teamMode));
+  const note=document.getElementById('rosterModeNote');
+  if(note) note.innerHTML=teamMode
+    ? '<strong>팀 대항전:</strong> 선수마다 팀1 또는 팀2를 지정해주세요.'
+    : '<strong>모임 내 대진:</strong> 팀을 나누지 않고 전체 선수를 한 명단으로 사용합니다.';
+}
+document.getElementById('matchMode')?.addEventListener('change',()=>{
+  updateRosterTeamUI();
+  renderPartialPairs();
+});
+setTimeout(updateRosterTeamUI,400);
