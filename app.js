@@ -17,7 +17,7 @@ const state={
   fixedPairs:{team1:[],team2:[]},
   settings:{
     mode:'balanced',matchType:'women',courts:3,rounds:5,targetGames:null,
-    eventInfoEnabled:false,eventName:'',eventDate:'',team1Name:'팀1',team2Name:'팀2'
+    eventInfoEnabled:false,eventName:'',eventDate:'',team1Name:'팀1',team2Name:'팀2',showGrades:true,partialPairs:[]
   }
 };
 
@@ -1238,7 +1238,7 @@ setTimeout(()=>{
 
 // ===== TODAYCOCK 2.2 =====
 function partialPairOptions(selected=''){
-  return '<option value="">선수 선택</option>'+state.players.map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${escapeHtml(p.name)}${state.settings.showGrades===false?'':` (${escapeHtml(p.grade)})`}</option>`).join('');
+  return '<option value="">선수 선택</option>'+state.players.map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${esc(p.name)}${state.settings.showGrades===false?'':` (${esc(p.grade)})`}</option>`).join('');
 }
 function renderPartialPairs(){
   const box=document.getElementById('partialPairList'); if(!box)return;
@@ -1269,7 +1269,7 @@ setTimeout(updateRosterTeamUI,400);
 
   function options(selected){
     return '<option value="">선수 선택</option>'+state.players.map(p=>
-      `<option value="${p.id}" ${p.id===selected?'selected':''}>${escapeHtml(p.name)}${state.settings.showGrades===false?'':` (${escapeHtml(p.grade)})`}</option>`
+      `<option value="${p.id}" ${p.id===selected?'selected':''}>${esc(p.name)}${state.settings.showGrades===false?'':` (${esc(p.grade)})`}</option>`
     ).join('');
   }
   function draw(){
@@ -1341,3 +1341,7 @@ document.getElementById('partialPairList')?.addEventListener('input',()=>{
   })).filter(x=>x.a&&x.b&&x.a!==x.b);
   saveState();
 });
+
+// 2.2.6 safety normalization
+if(!Array.isArray(state.settings.partialPairs)) state.settings.partialPairs=[];
+if(typeof state.settings.showGrades!=='boolean') state.settings.showGrades=true;
