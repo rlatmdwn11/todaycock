@@ -41,8 +41,9 @@ window.TodayCockSchedule = (() => {
   }
 
   function createInternal(players, settings, randomMode){
-    const games={},partners={},opponents={},partnerGrades={};
+    const games={},partners={},opponents={},partnerGrades={},roundGradeCombos={};
     players.forEach(p=>{games[p.id]=0;partnerGrades[p.id]={};});
+    const gradeComboKey=(a,b)=>[a.grade,b.grade].sort((x,y)=>(gradeScore[y]||0)-(gradeScore[x]||0)).join('');
     const schedule=[]; let made=0;
     const target=settings.targetGames || settings.courts*settings.rounds;
     const byId=new Map(players.map(p=>[p.id,p]));
@@ -83,15 +84,27 @@ window.TodayCockSchedule = (() => {
       // Strong weight so total partner-grade distribution matters more than a tiny random tie break.
       return (Math.abs(afterA-avg(peersA,b.grade))+Math.abs(afterB-avg(peersB,a.grade)))*8;
     }
-    function pairBaseScore(pair){
+    function roundSpreadScore(pair,round){
+      if(settings.balanceGrade===false)return 0;
+      const key=gradeComboKey(pair[0],pair[1]);
+      const current=(roundGradeCombos[round]&&roundGradeCombos[round][key])||0;
+      let total=0;
+      for(const counts of Object.values(roundGradeCombos))total+=counts[key]||0;
+      const completedRounds=Math.max(1,round-1);
+      const averageBefore=total/completedRounds;
+      // Spread AA/AB/BB/etc. through the event instead of clustering by time.
+      return Math.max(0,(current+1)-averageBefore)*10;
+    }
+    function pairBaseScore(pair,round){
       if(randomMode)return Math.random();
       let sc=Math.random()*.05;
       if(settings.balanceGames!==false)sc+=(games[pair[0].id]||0)+(games[pair[1].id]||0)*1;
       if(settings.minimizePartners!==false)sc+=(partners[pkey(...pair)]||0)*5;
       sc+=gradePartnerBalanceScore(pair[0],pair[1]);
+      sc+=roundSpreadScore(pair,round);
       return sc;
     }
-    function chooseOpponentPair(pool,used,firstPair){
+    function chooseOpponentPair(pool,used,firstPair,round){
       const pairs=allPairs(pool,used); if(!pairs.length)return null;
       const s1=pairStrength(firstPair);
       pairs.sort((x,y)=>{
@@ -102,7 +115,7 @@ window.TodayCockSchedule = (() => {
           for(const a of firstPair)for(const b of x)ox+=(opponents[okey(a,b)]||0)*3;
           for(const a of firstPair)for(const b of y)oy+=(opponents[okey(a,b)]||0)*3;
         }
-        return (gradeX+pairBaseScore(x)+ox)-(gradeY+pairBaseScore(y)+oy);
+        return (gradeX+pairBaseScore(x,round)+ox)-(gradeY+pairBaseScore(y,round)+oy);
       });
       return pairs[0];
     }
@@ -115,12 +128,12 @@ window.TodayCockSchedule = (() => {
         if(forced){pairA=forced.pair}
         else{
           const pairs=allPairs(pool,used);
-          pairs.sort((x,y)=>pairBaseScore(x)-pairBaseScore(y));
+          pairs.sort((x,y)=>pairBaseScore(x,round)-pairBaseScore(y,round));
           pairA=pairs[0]||null;
         }
         if(!pairA)break;
         pairA.forEach(p=>used.add(p.id));
-        const pairB=chooseOpponentPair(pool,used,pairA);
+        const pairB=chooseOpponentPair(pool,used,pairA,round);
         if(!pairB){pairA.forEach(p=>used.delete(p.id));break}
         pairB.forEach(p=>used.add(p.id));
 
@@ -133,6 +146,11 @@ window.TodayCockSchedule = (() => {
         partnerGrades[pairA[1].id][pairA[0].grade]=(partnerGrades[pairA[1].id][pairA[0].grade]||0)+1;
         partnerGrades[pairB[0].id][pairB[1].grade]=(partnerGrades[pairB[0].id][pairB[1].grade]||0)+1;
         partnerGrades[pairB[1].id][pairB[0].grade]=(partnerGrades[pairB[1].id][pairB[0].grade]||0)+1;
+        if(!roundGradeCombos[round])roundGradeCombos[round]={};
+        for(const pair of [pairA,pairB]){
+          const key=gradeComboKey(pair[0],pair[1]);
+          roundGradeCombos[round][key]=(roundGradeCombos[round][key]||0)+1;
+        }
         for(const a of pairA)for(const b of pairB)opponents[okey(a,b)]=(opponents[okey(a,b)]||0)+1;
         matches.push({court,team1:pairA,team2:pairB,score1:'',score2:''}); made++;
       }
