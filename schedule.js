@@ -41,8 +41,8 @@ window.TodayCockSchedule = (() => {
   }
 
   function createInternal(players, settings, randomMode){
-    const games={},partners={},opponents={};
-    players.forEach(p=>games[p.id]=0);
+    const games={},partners={},opponents={},partnerGrades={};
+    players.forEach(p=>{games[p.id]=0;partnerGrades[p.id]={};});
     const schedule=[]; let made=0;
     const target=settings.targetGames || settings.courts*settings.rounds;
     const byId=new Map(players.map(p=>[p.id,p]));
@@ -70,11 +70,25 @@ window.TodayCockSchedule = (() => {
       choices.sort((x,y)=>(games[x.pair[0].id]+games[x.pair[1].id])-(games[y.pair[0].id]+games[y.pair[1].id]));
       return choices[0]||null;
     }
+    function gradePartnerBalanceScore(a,b){
+      if(settings.balanceGrade===false)return 0;
+      // Compare players of the same grade: prefer giving them a similar distribution
+      // of partner grades (AA/AB/AC..., BB/BC..., etc.).
+      const count=(p,g)=>(partnerGrades[p.id]&&partnerGrades[p.id][g])||0;
+      const peersA=players.filter(p=>p.id!==a.id&&p.grade===a.grade);
+      const peersB=players.filter(p=>p.id!==b.id&&p.grade===b.grade);
+      const avg=(peers,g)=>peers.length?peers.reduce((sum,p)=>sum+count(p,g),0)/peers.length:0;
+      const afterA=count(a,b.grade)+1;
+      const afterB=count(b,a.grade)+1;
+      // Strong weight so total partner-grade distribution matters more than a tiny random tie break.
+      return (Math.abs(afterA-avg(peersA,b.grade))+Math.abs(afterB-avg(peersB,a.grade)))*8;
+    }
     function pairBaseScore(pair){
       if(randomMode)return Math.random();
       let sc=Math.random()*.05;
-      if(settings.balanceGames!==false)sc+=(games[pair[0].id]||0)+(games[pair[1].id]||0);
+      if(settings.balanceGames!==false)sc+=(games[pair[0].id]||0)+(games[pair[1].id]||0)*1;
       if(settings.minimizePartners!==false)sc+=(partners[pkey(...pair)]||0)*5;
+      sc+=gradePartnerBalanceScore(pair[0],pair[1]);
       return sc;
     }
     function chooseOpponentPair(pool,used,firstPair){
@@ -114,6 +128,11 @@ window.TodayCockSchedule = (() => {
         [...pairA,...pairB].forEach(p=>games[p.id]=(games[p.id]||0)+1);
         partners[pkey(...pairA)]=(partners[pkey(...pairA)]||0)+1;
         partners[pkey(...pairB)]=(partners[pkey(...pairB)]||0)+1;
+        // Track the grade of each player's partner so later matches can compensate.
+        partnerGrades[pairA[0].id][pairA[1].grade]=(partnerGrades[pairA[0].id][pairA[1].grade]||0)+1;
+        partnerGrades[pairA[1].id][pairA[0].grade]=(partnerGrades[pairA[1].id][pairA[0].grade]||0)+1;
+        partnerGrades[pairB[0].id][pairB[1].grade]=(partnerGrades[pairB[0].id][pairB[1].grade]||0)+1;
+        partnerGrades[pairB[1].id][pairB[0].grade]=(partnerGrades[pairB[1].id][pairB[0].grade]||0)+1;
         for(const a of pairA)for(const b of pairB)opponents[okey(a,b)]=(opponents[okey(a,b)]||0)+1;
         matches.push({court,team1:pairA,team2:pairB,score1:'',score2:''}); made++;
       }
