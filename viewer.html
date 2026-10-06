@@ -81,6 +81,10 @@
 
       <section class="card hidden" id="viewerAllCard">
         <h3>전체 대진표</h3>
+        <div style="margin:10px 0 14px">
+          <input id="viewerPlayerSearch" type="search" placeholder="내 이름 검색" autocomplete="off" style="width:100%">
+          <p class="help" id="viewerSearchHelp">이름을 입력하면 내 경기만 모아서 볼 수 있어요.</p>
+        </div>
         <div id="viewerAllMatches"></div>
       </section>
     </div>
@@ -93,6 +97,7 @@ const $=(id)=>document.getElementById(id);
 const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let db=null;
 let activeRef=null;
+let latestRoomData=null;
 
 function init(){
   if(!firebase.apps.length)firebase.initializeApp(window.TODAYCOCK_FIREBASE_CONFIG);
@@ -180,11 +185,22 @@ function renderRoom(data){
   $('viewerNextDetails').classList.toggle('hidden',!nextRound);
   $('viewerNextMatches').innerHTML=nextRound?(nextRound.matches||[]).map(renderMatch).join(''):'';
 
-  $('viewerAllMatches').innerHTML=rounds.map(round=>`
-    <div class="round-block">
-      <h4>${esc(round.round)}라운드</h4>
-      ${(round.matches||[]).map(renderMatch).join('')}
-    </div>`).join('');
+  latestRoomData=data;
+  renderAllMatches(rounds);
+}
+
+function renderAllMatches(rounds){
+  const input=$('viewerPlayerSearch');
+  const query=(input?.value||'').trim().toLowerCase();
+  let found=0;
+  const html=(rounds||[]).map(round=>{
+    const matches=(round.matches||[]).filter(match=>!query||[...(match.team1||[]),...(match.team2||[])].some(p=>String(p.name||'').toLowerCase().includes(query)));
+    if(!matches.length)return '';
+    found+=matches.length;
+    return `<div class="round-block"><h4>${esc(round.round)}라운드</h4>${matches.map(renderMatch).join('')}</div>`;
+  }).join('');
+  $('viewerAllMatches').innerHTML=html||(query?'<div class="viewer-empty">해당 이름의 경기를 찾을 수 없습니다.</div>':'<div class="viewer-empty">등록된 경기가 없습니다.</div>');
+  if($('viewerSearchHelp'))$('viewerSearchHelp').textContent=query?`${input.value.trim()}님의 경기 ${found}개를 찾았습니다.`:'이름을 입력하면 내 경기만 모아서 볼 수 있어요.';
 }
 
 function joinRoom(){
@@ -212,6 +228,7 @@ function joinRoom(){
   });
 }
 
+$('viewerPlayerSearch').addEventListener('input',()=>renderAllMatches(latestRoomData?.schedule||[]));
 $('viewerJoinBtn').addEventListener('click',joinRoom);
 $('viewerRoomInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom()});
 
