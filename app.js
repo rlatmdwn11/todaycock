@@ -149,7 +149,9 @@ $('settingsActionBtn').addEventListener('click',()=>{
 });
 
 function readSettings(){
+  // Preserve settings that are not part of the basic form (especially partial fixed partners).
   state.settings={
+    ...state.settings,
     mode:$('matchMode').value,
     matchType:$('matchType').value,
     courts:Math.max(1,Number($('courtCount').value)||1),
@@ -159,7 +161,12 @@ function readSettings(){
     eventName:$('eventName').value.trim(),
     eventDate:$('eventDate').value,
     team1Name:$('team1Name').value.trim()||'팀1',
-    team2Name:$('team2Name').value.trim()||'팀2'
+    team2Name:$('team2Name').value.trim()||'팀2',
+    showGrades:$('showGrades')?$('showGrades').checked:(state.settings.showGrades!==false),
+    balanceGrade:$('balanceGrade')?$('balanceGrade').checked:(state.settings.balanceGrade!==false),
+    balanceGames:$('balanceGames')?$('balanceGames').checked:(state.settings.balanceGames!==false),
+    minimizePartners:$('minimizePartners')?$('minimizePartners').checked:(state.settings.minimizePartners!==false),
+    minimizeOpponents:$('minimizeOpponents')?$('minimizeOpponents').checked:(state.settings.minimizeOpponents!==false)
   };
 }
 function applySettings(){
@@ -317,6 +324,8 @@ function renderReady(){
 }
 
 $('generateBtn').addEventListener('click',()=>{
+  // Commit the visible partial-pair rows before reading/generating settings.
+  if(typeof savePartialPairsFromUI==='function')savePartialPairsFromUI();
   readSettings();
   if(state.schedule.length&&!confirm('기존 대진표를 지우고 다시 만들까요?'))return;
   state.settings.fixedPairs=cloneData(state.fixedPairs);
