@@ -20,7 +20,7 @@
         <h1>오늘콕</h1>
         <p class="brand-en">TODAYCOCK</p>
         <p class="brand-sub">배드민턴 대진 매니저</p>
-        <p class="brand-meta">Version 2.2.2 · Made by 김승주</p>
+        <p class="brand-meta">Version 2.2.5 · Made by 김승주</p>
         <div class="mode-buttons">
           <button class="btn primary" id="openAdminBtn">운영자 모드</button>
           <button class="btn secondary" id="openViewerBtn">관람 모드</button>
@@ -144,12 +144,7 @@
           </div>
 
 
-          <div class="sub-panel partial-pair-panel" id="partialPairPanel">
-<div class="section-head"><div><h4>부분 고정 파트너</h4><p>일부 선수만 원하는 경기 수만큼 같은 파트너로 배정합니다.</p></div>
-<button type="button" class="btn secondary compact" id="addPartialPairBtn">+ 추가</button></div>
-<div id="partialPairList"></div>
-<p class="help">지정 횟수를 채운 뒤에는 일반 대진 조건에 따라 다른 파트너와 배정될 수 있습니다.</p></div>
-<div class="generation-options">
+          <div class="generation-options">
             <div class="generation-options-title">
               <strong>대진 생성 옵션</strong>
               <span>원하는 조건만 선택하세요.</span>
@@ -230,7 +225,12 @@
           </div>
         </section>
 
-        <section class="card">
+        <div class="sub-panel partial-pair-panel" id="partialPairPanel">
+<div class="section-head"><div><h4>부분 고정 파트너</h4><p>일부 선수만 원하는 경기 수만큼 같은 파트너로 배정합니다.</p></div>
+<button type="button" class="btn secondary compact" id="addPartialPairBtn">+ 추가</button></div>
+<div id="partialPairList"></div>
+<p class="help">지정 횟수를 채운 뒤에는 일반 대진 조건에 따라 다른 파트너와 배정될 수 있습니다.</p></div>
+<section class="card">
           <div class="section-title">
             <span class="step">2</span>
             <div><h3>선수 명단</h3><p>선수를 등록하고 팀과 급수를 설정하세요.</p></div>

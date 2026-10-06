@@ -1253,25 +1253,91 @@ function renderPartialPairs(){
 function readPartialPairs(){
   return [...document.querySelectorAll('.partial-pair-row')].map(r=>({a:r.querySelector('.partial-a')?.value||'',b:r.querySelector('.partial-b')?.value||'',count:Math.max(1,Number(r.querySelector('.partial-count')?.value)||1)})).filter(x=>x.a&&x.b&&x.a!==x.b);
 }
-document.getElementById('addPartialPairBtn')?.addEventListener('click',()=>{state.settings.partialPairs=readPartialPairs();state.settings.partialPairs.push({a:'',b:'',count:1});renderPartialPairs();});
-document.getElementById('partialPairList')?.addEventListener('change',()=>{state.settings.partialPairs=readPartialPairs();saveState();});
-document.getElementById('partialPairList')?.addEventListener('click',e=>{const b=e.target.closest('.partial-pair-remove');if(!b)return;const rows=[...document.querySelectorAll('.partial-pair-row')];const i=rows.indexOf(b.closest('.partial-pair-row'));state.settings.partialPairs=readPartialPairs();if(i>=0)state.settings.partialPairs.splice(i,1);renderPartialPairs();saveState();});
 
-// ===== TODAYCOCK 2.2.1: mode-aware team selection =====
-function isTeamMatchMode(){
-  const mode=document.getElementById('matchMode')?.value||state.settings.matchMode||'balanced';
-  return mode==='team'||mode==='fixed';
-}
-function updateRosterTeamUI(){
-  const teamMode=isTeamMatchMode();
-  document.querySelectorAll('.player-team-field').forEach(el=>el.classList.toggle('mode-hidden',!teamMode));
-  const note=document.getElementById('rosterModeNote');
-  if(note) note.innerHTML=teamMode
-    ? '<strong>팀 대항전:</strong> 선수마다 팀1 또는 팀2를 지정해주세요.'
-    : '<strong>모임 내 대진:</strong> 팀을 나누지 않고 전체 선수를 한 명단으로 사용합니다.';
-}
-document.getElementById('matchMode')?.addEventListener('change',()=>{
-  updateRosterTeamUI();
-  renderPartialPairs();
-});
 setTimeout(updateRosterTeamUI,400);
+
+
+// ===== TODAYCOCK 2.2.4: robust partial fixed partner UI =====
+(function initPartialPartnerUI(){
+  const addBtn=document.getElementById('addPartialPairBtn');
+  const list=document.getElementById('partialPairList');
+  if(!addBtn||!list){ console.warn('partial partner UI not found'); return; }
+
+  let drafts=Array.isArray(state.settings.partialPairs)
+    ? state.settings.partialPairs.map(x=>({...x}))
+    : [];
+
+  function options(selected){
+    return '<option value="">선수 선택</option>'+state.players.map(p=>
+      `<option value="${p.id}" ${p.id===selected?'selected':''}>${escapeHtml(p.name)}${state.settings.showGrades===false?'':` (${escapeHtml(p.grade)})`}</option>`
+    ).join('');
+  }
+  function draw(){
+    if(!drafts.length){
+      list.innerHTML='<p class="empty">설정된 부분 고정 파트너가 없습니다. 위의 + 추가 버튼을 눌러주세요.</p>';
+      return;
+    }
+    list.innerHTML=drafts.map((x,i)=>`
+      <div class="partial-pair-row" data-i="${i}">
+        <select class="partial-a">${options(x.a||'')}</select>
+        <span class="partial-pair-vs">+</span>
+        <select class="partial-b">${options(x.b||'')}</select>
+        <label class="partial-pair-count">
+          <input class="partial-count" type="number" inputmode="numeric" min="1" max="99" value="${Math.max(1,Number(x.count)||1)}">
+          <small>경기</small>
+        </label>
+        <button type="button" class="partial-pair-remove" data-remove="${i}" aria-label="삭제">×</button>
+      </div>`).join('');
+  }
+  function saveValid(){
+    state.settings.partialPairs=drafts
+      .filter(x=>x.a&&x.b&&x.a!==x.b)
+      .map(x=>({a:x.a,b:x.b,count:Math.max(1,Number(x.count)||1)}));
+    saveState();
+  }
+
+  addBtn.onclick=function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    drafts.push({a:'',b:'',count:1});
+    draw();
+  };
+
+  list.onchange=function(e){
+    const row=e.target.closest('.partial-pair-row'); if(!row)return;
+    const i=Number(row.dataset.i); if(!Number.isInteger(i)||!drafts[i])return;
+    drafts[i]={
+      a:row.querySelector('.partial-a').value,
+      b:row.querySelector('.partial-b').value,
+      count:Math.max(1,Number(row.querySelector('.partial-count').value)||1)
+    };
+    saveValid();
+  };
+
+  list.onclick=function(e){
+    const btn=e.target.closest('[data-remove]'); if(!btn)return;
+    e.preventDefault();
+    const i=Number(btn.dataset.remove);
+    if(Number.isInteger(i)){drafts.splice(i,1);draw();saveValid();}
+  };
+
+  window.renderPartialPairs=function(){
+    const saved=Array.isArray(state.settings.partialPairs)?state.settings.partialPairs:[];
+    // Don't erase an unfinished row merely because another render happened.
+    const unfinished=drafts.filter(x=>!x.a||!x.b);
+    drafts=[...saved.map(x=>({...x})),...unfinished];
+    draw();
+  };
+  draw();
+})();
+
+// 2.2.5: save partial partner selections/counts immediately.
+document.getElementById('partialPairList')?.addEventListener('input',()=>{
+  const rows=[...document.querySelectorAll('#partialPairList .partial-pair-row')];
+  state.settings.partialPairs=rows.map(r=>({
+    a:r.querySelector('.partial-a')?.value||'',
+    b:r.querySelector('.partial-b')?.value||'',
+    count:Math.max(1,Number(r.querySelector('.partial-count')?.value)||1)
+  })).filter(x=>x.a&&x.b&&x.a!==x.b);
+  saveState();
+});

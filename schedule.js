@@ -41,34 +41,83 @@ window.TodayCockSchedule = (() => {
   }
 
   function createInternal(players, settings, randomMode){
-    const games={},partners={};
+    const games={},partners={},opponents={};
     players.forEach(p=>games[p.id]=0);
-    const schedule=[];
-    let made=0;
+    const schedule=[]; let made=0;
     const target=settings.targetGames || settings.courts*settings.rounds;
+    const byId=new Map(players.map(p=>[p.id,p]));
+    const fixed=(settings.partialPairs||[])
+      .filter(x=>x.a&&x.b&&x.a!==x.b&&Number(x.count)>0&&byId.has(x.a)&&byId.has(x.b))
+      .map(x=>({a:x.a,b:x.b,target:Number(x.count),used:0}));
 
-    for(let round=1;round<=settings.rounds && made<target;round++){
-      const matches=[],used=new Set();
-      for(let court=1;court<=settings.courts && made<target;court++){
-        const pool=randomMode?shuffle(players):players;
-        const pairA=randomMode
-          ? chooseBestPair(pool,used,{}, {}, settings.matchType,settings)
-          : chooseBestPair(pool,used,games,partners,settings.matchType,settings);
-        if(!pairA) break;
-        pairA.forEach(p=>used.add(p.id));
-        const pairB=randomMode
-          ? chooseBestPair(pool,used,{}, {}, settings.matchType,settings)
-          : chooseBestPair(pool,used,games,partners,settings.matchType,settings);
-        if(!pairB) break;
+    const pkey=(a,b)=>[a.id,b.id].sort().join('|');
+    const okey=(a,b)=>[a.id,b.id].sort().join('|');
+    const pairStrength=pair=>(gradeScore[pair[0].grade]||0)+(gradeScore[pair[1].grade]||0);
 
-        [...pairA,...pairB].forEach(p=>{used.add(p.id);games[p.id]=(games[p.id]||0)+1});
-        partners[pairKey(pairA[0],pairA[1])] = (partners[pairKey(pairA[0],pairA[1])]||0)+1;
-        partners[pairKey(pairB[0],pairB[1])] = (partners[pairKey(pairB[0],pairB[1])]||0)+1;
-
-        matches.push({court,team1:pairA,team2:pairB,score1:'',score2:''});
-        made++;
+    function allPairs(pool,used){
+      const out=[];
+      for(let i=0;i<pool.length;i++)for(let j=i+1;j<pool.length;j++){
+        const a=pool[i],b=pool[j];
+        if(used.has(a.id)||used.has(b.id)||!validPair(a,b,settings.matchType))continue;
+        out.push([a,b]);
       }
-      if(matches.length) schedule.push({round,matches});
+      return out;
+    }
+    function desiredPair(used){
+      const choices=fixed.filter(x=>x.used<x.target&&!used.has(x.a)&&!used.has(x.b))
+        .map(x=>({rule:x,pair:[byId.get(x.a),byId.get(x.b)]}))
+        .filter(x=>x.pair.every(Boolean)&&validPair(x.pair[0],x.pair[1],settings.matchType));
+      choices.sort((x,y)=>(games[x.pair[0].id]+games[x.pair[1].id])-(games[y.pair[0].id]+games[y.pair[1].id]));
+      return choices[0]||null;
+    }
+    function pairBaseScore(pair){
+      if(randomMode)return Math.random();
+      let sc=Math.random()*.05;
+      if(settings.balanceGames!==false)sc+=(games[pair[0].id]||0)+(games[pair[1].id]||0);
+      if(settings.minimizePartners!==false)sc+=(partners[pkey(...pair)]||0)*5;
+      return sc;
+    }
+    function chooseOpponentPair(pool,used,firstPair){
+      const pairs=allPairs(pool,used); if(!pairs.length)return null;
+      const s1=pairStrength(firstPair);
+      pairs.sort((x,y)=>{
+        const gradeX=settings.balanceGrade===false?0:Math.abs(s1-pairStrength(x))*100;
+        const gradeY=settings.balanceGrade===false?0:Math.abs(s1-pairStrength(y))*100;
+        let ox=0,oy=0;
+        if(settings.minimizeOpponents!==false){
+          for(const a of firstPair)for(const b of x)ox+=(opponents[okey(a,b)]||0)*3;
+          for(const a of firstPair)for(const b of y)oy+=(opponents[okey(a,b)]||0)*3;
+        }
+        return (gradeX+pairBaseScore(x)+ox)-(gradeY+pairBaseScore(y)+oy);
+      });
+      return pairs[0];
+    }
+
+    for(let round=1;round<=settings.rounds&&made<target;round++){
+      const matches=[],used=new Set();
+      for(let court=1;court<=settings.courts&&made<target;court++){
+        const pool=randomMode?shuffle(players):players;
+        let forced=desiredPair(used),pairA;
+        if(forced){pairA=forced.pair}
+        else{
+          const pairs=allPairs(pool,used);
+          pairs.sort((x,y)=>pairBaseScore(x)-pairBaseScore(y));
+          pairA=pairs[0]||null;
+        }
+        if(!pairA)break;
+        pairA.forEach(p=>used.add(p.id));
+        const pairB=chooseOpponentPair(pool,used,pairA);
+        if(!pairB){pairA.forEach(p=>used.delete(p.id));break}
+        pairB.forEach(p=>used.add(p.id));
+
+        if(forced)forced.rule.used++;
+        [...pairA,...pairB].forEach(p=>games[p.id]=(games[p.id]||0)+1);
+        partners[pkey(...pairA)]=(partners[pkey(...pairA)]||0)+1;
+        partners[pkey(...pairB)]=(partners[pkey(...pairB)]||0)+1;
+        for(const a of pairA)for(const b of pairB)opponents[okey(a,b)]=(opponents[okey(a,b)]||0)+1;
+        matches.push({court,team1:pairA,team2:pairB,score1:'',score2:''}); made++;
+      }
+      if(matches.length)schedule.push({round,matches});
     }
     return schedule;
   }
@@ -133,26 +182,6 @@ window.TodayCockSchedule = (() => {
     if(settings.mode==='fixed')return createFixed(players,settings);
     if(settings.mode==='team')return createTeam(players,settings);
     return createInternal(players,settings,settings.mode==='random');
-  }
-
-  
-  function applyPartialPairs(rounds,settings){
-    const wanted=(settings.partialPairs||[]).filter(x=>x.a&&x.b&&x.a!==x.b&&Number(x.count)>0);
-    const pairCount=(a,b)=>rounds.reduce((n,r)=>n+(r.matches||[]).reduce((q,m)=>q+([[m.a1,m.a2],[m.b1,m.b2]].some(s=>s.includes(a)&&s.includes(b))?1:0),0),0);
-    wanted.forEach(w=>{
-      let need=Number(w.count)-pairCount(w.a,w.b);
-      for(const r of rounds){
-        if(need<=0)break;
-        const ms=r.matches||[]; let A=null,B=null;
-        ms.forEach((m,mi)=>[['a1','a2'],['b1','b2']].forEach(side=>side.forEach(k=>{
-          if(m[k]===w.a)A={m,mi,k,side}; if(m[k]===w.b)B={m,mi,k,side};
-        })));
-        if(!A||!B||A.mi===B.mi)continue;
-        const pk=A.side.find(k=>k!==A.k), old=A.m[pk];
-        A.m[pk]=w.b; B.m[B.k]=old; need--;
-      }
-    });
-    return rounds;
   }
 
 return {generate,validPair};

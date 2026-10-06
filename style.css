@@ -508,3 +508,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{
 .player-team-field{display:block;width:100%;min-width:0}
 .player-team-field>select{width:100%;min-width:0}
 .player-team-field.mode-hidden{display:none!important}
+
+/* 2.2.4 placement */
+#partialPairPanel{margin-top:16px;margin-bottom:16px}
+#addPartialPairBtn{position:relative;z-index:2;pointer-events:auto}
