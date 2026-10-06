@@ -106,10 +106,19 @@ window.TodayCockSchedule = (() => {
     }
     function chooseOpponentPair(pool,used,firstPair,round){
       const pairs=allPairs(pool,used); if(!pairs.length)return null;
+      const firstCombo=gradeComboKey(firstPair[0],firstPair[1]);
       const s1=pairStrength(firstPair);
-      pairs.sort((x,y)=>{
-        const gradeX=settings.balanceGrade===false?0:Math.abs(s1-pairStrength(x))*100;
-        const gradeY=settings.balanceGrade===false?0:Math.abs(s1-pairStrength(y))*100;
+      // When grade balancing is on, first require the same pair-grade composition
+      // (AA vs AA, AB vs AB, BB vs BB...). Only fall back when that exact
+      // composition is impossible with the remaining players in this round.
+      let candidates=pairs;
+      if(settings.balanceGrade!==false){
+        const exact=pairs.filter(p=>gradeComboKey(p[0],p[1])===firstCombo);
+        if(exact.length)candidates=exact;
+      }
+      candidates.sort((x,y)=>{
+        const gradeX=settings.balanceGrade===false?0:Math.abs(s1-pairStrength(x))*1000;
+        const gradeY=settings.balanceGrade===false?0:Math.abs(s1-pairStrength(y))*1000;
         let ox=0,oy=0;
         if(settings.minimizeOpponents!==false){
           for(const a of firstPair)for(const b of x)ox+=(opponents[okey(a,b)]||0)*3;
@@ -117,7 +126,7 @@ window.TodayCockSchedule = (() => {
         }
         return (gradeX+pairBaseScore(x,round)+ox)-(gradeY+pairBaseScore(y,round)+oy);
       });
-      return pairs[0];
+      return candidates[0];
     }
 
     for(let round=1;round<=settings.rounds&&made<target;round++){
