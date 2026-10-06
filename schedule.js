@@ -41,9 +41,8 @@ window.TodayCockSchedule = (() => {
   }
 
   function createInternal(players, settings, randomMode){
-    const games={},partners={},opponents={},partnerGrades={},roundGradeCombos={};
+    const games={},partners={},opponents={},partnerGrades={};
     players.forEach(p=>{games[p.id]=0;partnerGrades[p.id]={};});
-    const gradeComboKey=(a,b)=>[a.grade,b.grade].sort((x,y)=>(gradeScore[y]||0)-(gradeScore[x]||0)).join('');
     const schedule=[]; let made=0;
     const target=settings.targetGames || settings.courts*settings.rounds;
     const byId=new Map(players.map(p=>[p.id,p]));
@@ -53,115 +52,99 @@ window.TodayCockSchedule = (() => {
 
     const pkey=(a,b)=>[a.id,b.id].sort().join('|');
     const okey=(a,b)=>[a.id,b.id].sort().join('|');
-    const pairStrength=pair=>(gradeScore[pair[0].grade]||0)+(gradeScore[pair[1].grade]||0);
+    const comboKey=(a,b)=>[a.grade,b.grade].sort((x,y)=>(gradeScore[y]||0)-(gradeScore[x]||0)).join('');
+    const strength=pair=>(gradeScore[pair[0].grade]||0)+(gradeScore[pair[1].grade]||0);
 
-    function allPairs(pool,used){
+    function allPairs(used){
       const out=[];
-      for(let i=0;i<pool.length;i++)for(let j=i+1;j<pool.length;j++){
-        const a=pool[i],b=pool[j];
+      for(let i=0;i<players.length;i++)for(let j=i+1;j<players.length;j++){
+        const a=players[i],b=players[j];
         if(used.has(a.id)||used.has(b.id)||!validPair(a,b,settings.matchType))continue;
         out.push([a,b]);
       }
       return out;
     }
-    function desiredPair(used){
-      const choices=fixed.filter(x=>x.used<x.target&&!used.has(x.a)&&!used.has(x.b))
-        .map(x=>({rule:x,pair:[byId.get(x.a),byId.get(x.b)]}))
-        .filter(x=>x.pair.every(Boolean)&&validPair(x.pair[0],x.pair[1],settings.matchType));
-      choices.sort((x,y)=>(games[x.pair[0].id]+games[x.pair[1].id])-(games[y.pair[0].id]+games[y.pair[1].id]));
-      return choices[0]||null;
+    function forcedRuleFor(pair){
+      const a=pair[0].id,b=pair[1].id;
+      return fixed.find(x=>x.used<x.target&&((x.a===a&&x.b===b)||(x.a===b&&x.b===a)))||null;
     }
-    function gradePartnerBalanceScore(a,b){
-      if(settings.balanceGrade===false)return 0;
-      // Compare players of the same grade: prefer giving them a similar distribution
-      // of partner grades (AA/AB/AC..., BB/BC..., etc.).
-      const count=(p,g)=>(partnerGrades[p.id]&&partnerGrades[p.id][g])||0;
-      const peersA=players.filter(p=>p.id!==a.id&&p.grade===a.grade);
-      const peersB=players.filter(p=>p.id!==b.id&&p.grade===b.grade);
-      const avg=(peers,g)=>peers.length?peers.reduce((sum,p)=>sum+count(p,g),0)/peers.length:0;
-      const afterA=count(a,b.grade)+1;
-      const afterB=count(b,a.grade)+1;
-      // Strong weight so total partner-grade distribution matters more than a tiny random tie break.
-      return (Math.abs(afterA-avg(peersA,b.grade))+Math.abs(afterB-avg(peersB,a.grade)))*8;
+    function hasPendingForcedPlayer(p){
+      return fixed.some(x=>x.used<x.target&&(x.a===p.id||x.b===p.id));
     }
-    function roundSpreadScore(pair,round){
-      if(settings.balanceGrade===false)return 0;
-      const key=gradeComboKey(pair[0],pair[1]);
-      const current=(roundGradeCombos[round]&&roundGradeCombos[round][key])||0;
-      let total=0;
-      for(const counts of Object.values(roundGradeCombos))total+=counts[key]||0;
-      const completedRounds=Math.max(1,round-1);
-      const averageBefore=total/completedRounds;
-      // Spread AA/AB/BB/etc. through the event instead of clustering by time.
-      return Math.max(0,(current+1)-averageBefore)*10;
-    }
-    function pairBaseScore(pair,round){
+    function pairHistoryScore(pair){
       if(randomMode)return Math.random();
-      let sc=Math.random()*.05;
-      if(settings.balanceGames!==false)sc+=(games[pair[0].id]||0)+(games[pair[1].id]||0)*1;
-      if(settings.minimizePartners!==false)sc+=(partners[pkey(...pair)]||0)*5;
-      sc+=gradePartnerBalanceScore(pair[0],pair[1]);
-      sc+=roundSpreadScore(pair,round);
-      return sc;
-    }
-    function chooseOpponentPair(pool,used,firstPair,round){
-      const pairs=allPairs(pool,used); if(!pairs.length)return null;
-      const firstCombo=gradeComboKey(firstPair[0],firstPair[1]);
-      const s1=pairStrength(firstPair);
-      // When grade balancing is on, first require the same pair-grade composition
-      // (AA vs AA, AB vs AB, BB vs BB...). Only fall back when that exact
-      // composition is impossible with the remaining players in this round.
-      let candidates=pairs;
+      const [a,b]=pair;
+      let score=Math.random()*.03;
+      if(settings.balanceGames!==false)score+=((games[a.id]||0)+(games[b.id]||0))*3;
+      if(settings.minimizePartners!==false)score+=(partners[pkey(a,b)]||0)*8;
       if(settings.balanceGrade!==false){
-        const exact=pairs.filter(p=>gradeComboKey(p[0],p[1])===firstCombo);
-        if(exact.length)candidates=exact;
+        const ca=(partnerGrades[a.id]&&partnerGrades[a.id][b.grade])||0;
+        const cb=(partnerGrades[b.id]&&partnerGrades[b.id][a.grade])||0;
+        score+=(ca+cb)*5;
       }
-      candidates.sort((x,y)=>{
-        const gradeX=settings.balanceGrade===false?0:Math.abs(s1-pairStrength(x))*1000;
-        const gradeY=settings.balanceGrade===false?0:Math.abs(s1-pairStrength(y))*1000;
-        let ox=0,oy=0;
-        if(settings.minimizeOpponents!==false){
-          for(const a of firstPair)for(const b of x)ox+=(opponents[okey(a,b)]||0)*3;
-          for(const a of firstPair)for(const b of y)oy+=(opponents[okey(a,b)]||0)*3;
-        }
-        return (gradeX+pairBaseScore(x,round)+ox)-(gradeY+pairBaseScore(y,round)+oy);
+      return score;
+    }
+    function matchupScore(a,b){
+      const ca=comboKey(a[0],a[1]),cb=comboKey(b[0],b[1]);
+      let score=0;
+      if(settings.balanceGrade!==false){
+        // Exact composition is the goal: AA-AA, AB-AB, BB-BB, etc.
+        if(ca!==cb)score+=10000;
+        score+=Math.abs(strength(a)-strength(b))*1000;
+      }
+      score+=pairHistoryScore(a)+pairHistoryScore(b);
+      if(settings.minimizeOpponents!==false){
+        for(const x of a)for(const y of b)score+=(opponents[okey(x,y)]||0)*4;
+      }
+      return score;
+    }
+    function candidateMatches(used){
+      const pairs=allPairs(used),out=[];
+      for(let i=0;i<pairs.length;i++)for(let j=i+1;j<pairs.length;j++){
+        const a=pairs[i],b=pairs[j];
+        if(a.some(p=>b.some(q=>q.id===p.id)))continue;
+        const fa=forcedRuleFor(a),fb=forcedRuleFor(b);
+        // Pending partial-fixed pairs get first priority; don't consume one member
+        // in a different pair while its required pair can be scheduled.
+        let forcedPriority=(fa?1:0)+(fb?1:0);
+        const breaksPending=[...a,...b].some(p=>hasPendingForcedPlayer(p))&&!fa&&!fb;
+        out.push({a,b,fa,fb,forcedPriority,breaksPending,score:matchupScore(a,b)});
+      }
+      out.sort((x,y)=>{
+        if(x.forcedPriority!==y.forcedPriority)return y.forcedPriority-x.forcedPriority;
+        if(x.breaksPending!==y.breaksPending)return Number(x.breaksPending)-Number(y.breaksPending);
+        return x.score-y.score;
       });
-      return candidates[0];
+      return out;
     }
 
     for(let round=1;round<=settings.rounds&&made<target;round++){
       const matches=[],used=new Set();
       for(let court=1;court<=settings.courts&&made<target;court++){
-        const pool=randomMode?shuffle(players):players;
-        let forced=desiredPair(used),pairA;
-        if(forced){pairA=forced.pair}
-        else{
-          const pairs=allPairs(pool,used);
-          pairs.sort((x,y)=>pairBaseScore(x,round)-pairBaseScore(y,round));
-          pairA=pairs[0]||null;
+        let candidates=candidateMatches(used);
+        if(!candidates.length)break;
+        if(settings.balanceGrade!==false){
+          // If an exact same-composition matchup exists, never choose AA-BB merely
+          // because it improves another heuristic.
+          const exact=candidates.filter(c=>comboKey(c.a[0],c.a[1])===comboKey(c.b[0],c.b[1]));
+          const bestForced=candidates[0]?.forcedPriority||0;
+          const exactForced=exact.filter(c=>c.forcedPriority===bestForced);
+          if(exactForced.length)candidates=exactForced;
+          else if(exact.length&&bestForced===0)candidates=exact;
         }
-        if(!pairA)break;
-        pairA.forEach(p=>used.add(p.id));
-        const pairB=chooseOpponentPair(pool,used,pairA,round);
-        if(!pairB){pairA.forEach(p=>used.delete(p.id));break}
-        pairB.forEach(p=>used.add(p.id));
-
-        if(forced)forced.rule.used++;
-        [...pairA,...pairB].forEach(p=>games[p.id]=(games[p.id]||0)+1);
+        const pick=candidates[0]; if(!pick)break;
+        const {a:pairA,b:pairB}=pick;
+        [...pairA,...pairB].forEach(p=>{used.add(p.id);games[p.id]=(games[p.id]||0)+1;});
+        if(pick.fa)pick.fa.used++;
+        if(pick.fb&&pick.fb!==pick.fa)pick.fb.used++;
         partners[pkey(...pairA)]=(partners[pkey(...pairA)]||0)+1;
         partners[pkey(...pairB)]=(partners[pkey(...pairB)]||0)+1;
-        // Track the grade of each player's partner so later matches can compensate.
         partnerGrades[pairA[0].id][pairA[1].grade]=(partnerGrades[pairA[0].id][pairA[1].grade]||0)+1;
         partnerGrades[pairA[1].id][pairA[0].grade]=(partnerGrades[pairA[1].id][pairA[0].grade]||0)+1;
         partnerGrades[pairB[0].id][pairB[1].grade]=(partnerGrades[pairB[0].id][pairB[1].grade]||0)+1;
         partnerGrades[pairB[1].id][pairB[0].grade]=(partnerGrades[pairB[1].id][pairB[0].grade]||0)+1;
-        if(!roundGradeCombos[round])roundGradeCombos[round]={};
-        for(const pair of [pairA,pairB]){
-          const key=gradeComboKey(pair[0],pair[1]);
-          roundGradeCombos[round][key]=(roundGradeCombos[round][key]||0)+1;
-        }
-        for(const a of pairA)for(const b of pairB)opponents[okey(a,b)]=(opponents[okey(a,b)]||0)+1;
-        matches.push({court,team1:pairA,team2:pairB,score1:'',score2:''}); made++;
+        for(const x of pairA)for(const y of pairB)opponents[okey(x,y)]=(opponents[okey(x,y)]||0)+1;
+        matches.push({court,team1:pairA,team2:pairB,score1:'',score2:''});made++;
       }
       if(matches.length)schedule.push({round,matches});
     }
