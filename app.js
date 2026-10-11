@@ -534,6 +534,7 @@ function livePayload(active=true){
       percent:flat.length?Math.round(completed/flat.length*100):0
     },
     scoreboard:{team1Wins,team2Wins,draws},
+    finalStats:completed?(()=>{const x=calcFinalStats();return {mvp:x.mvp,bestRate:x.bestRate,mostGames:x.mostGames,team1Points:x.team1Points,team2Points:x.team2Points};})():null,
     schedule:state.schedule.map(r=>({
       round:r.round,
       matches:r.matches.map(m=>({
