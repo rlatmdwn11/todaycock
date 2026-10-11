@@ -41,7 +41,7 @@ window.TodayCockSchedule = (() => {
   }
 
   function createInternal(players, settings, randomMode){
-    const games={},partners={},opponents={},partnerGrades={};
+    const games={},partners={},opponents={},encounters={},partnerGrades={};
     players.forEach(p=>{games[p.id]=0;partnerGrades[p.id]={};});
     const schedule=[]; let made=0;
     const target=settings.targetGames || settings.courts*settings.rounds;
@@ -93,6 +93,13 @@ window.TodayCockSchedule = (() => {
         score+=Math.abs(strength(a)-strength(b))*1000;
       }
       score+=pairHistoryScore(a)+pairHistoryScore(b);
+      if(!randomMode){
+        const group=[...a,...b];
+        for(let i=0;i<group.length;i++)for(let j=i+1;j<group.length;j++){
+          const seen=encounters[okey(group[i],group[j])]||0;
+          score+=seen*seen*35;
+        }
+      }
       if(settings.minimizeOpponents!==false){
         for(const x of a)for(const y of b)score+=(opponents[okey(x,y)]||0)*4;
       }
@@ -144,6 +151,10 @@ window.TodayCockSchedule = (() => {
         partnerGrades[pairB[0].id][pairB[1].grade]=(partnerGrades[pairB[0].id][pairB[1].grade]||0)+1;
         partnerGrades[pairB[1].id][pairB[0].grade]=(partnerGrades[pairB[1].id][pairB[0].grade]||0)+1;
         for(const x of pairA)for(const y of pairB)opponents[okey(x,y)]=(opponents[okey(x,y)]||0)+1;
+        const group=[...pairA,...pairB];
+        for(let i=0;i<group.length;i++)for(let j=i+1;j<group.length;j++){
+          const key=okey(group[i],group[j]);encounters[key]=(encounters[key]||0)+1;
+        }
         matches.push({court,team1:pairA,team2:pairB,score1:'',score2:''});made++;
       }
       if(matches.length)schedule.push({round,matches});
