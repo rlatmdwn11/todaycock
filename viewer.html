@@ -79,6 +79,8 @@
         </div>
       </section>
 
+      <section class="card hidden" id="viewerResultCard"><h3>🏆 경기 결과 · MVP</h3><div id="viewerResultSummary"></div></section>
+
       <section class="card hidden" id="viewerAllCard">
         <h3>전체 대진표</h3>
         <div style="margin:10px 0 14px">
@@ -143,6 +145,7 @@ function renderRoom(data){
     $('viewerStatus').classList.remove('hidden');
     $('viewerContent').classList.add('hidden');
     $('viewerAllCard').classList.add('hidden');
+    $('viewerResultCard').classList.add('hidden');
     return;
   }
 
@@ -151,6 +154,12 @@ function renderRoom(data){
   $('viewerAllCard').classList.remove('hidden');
 
   const event=data.eventInfo||{};
+  const stats=data.finalStats;
+  $('viewerResultCard').classList.toggle('hidden',!stats);
+  if(stats){
+    const completed=Number(data.progress?.completed||0),total=Number(data.progress?.total||0);
+    $('viewerResultSummary').innerHTML=`<p class="help">${completed} / ${total}경기 완료${completed<total?' · 진행 중인 집계':''}</p><div class="award-grid"><div class="award-card"><span>🏅 MVP</span><strong>${esc(stats.mvp?.name||'-')}</strong><small>${esc(stats.mvp?stats.mvp.wins+'승 '+stats.mvp.losses+'패':'기록 없음')}</small></div><div class="award-card"><span>⭐ 최고 승률</span><strong>${esc(stats.bestRate?.name||'-')}</strong><small>${esc(stats.bestRate?stats.bestRate.rate+'%':'기록 없음')}</small></div><div class="award-card"><span>🔥 최다 출전</span><strong>${esc(stats.mostGames?.name||'-')}</strong><small>${esc(stats.mostGames?stats.mostGames.games+'경기':'기록 없음')}</small></div></div>`;
+  }
   const progress=data.progress||{};
   const scoreboard=data.scoreboard||{};
   const rounds=data.schedule||[];
