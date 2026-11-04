@@ -218,10 +218,69 @@ window.TodayCockSchedule = (() => {
     return schedule;
   }
 
+  // Evaluate the entire draw, not only the next match. A locally fair choice can
+  // leave some A players with 4 AA games and others with 2.
+  function drawFairness(schedule,players,settings){
+    const counts=new Map(players.map(p=>[p.id,{games:0,combinations:{},partners:{},opponents:{}}]));
+    const gradeTotals={};
+    for(const p of players)gradeTotals[p.grade]=(gradeTotals[p.grade]||0)+1;
+    let mismatched=0;
+    for(const round of schedule)for(const m of round.matches){
+      const a=m.team1,b=m.team2;
+      if([a,b].some(pair=>pair.length!==2))continue;
+      const type=pair=>[pair[0].grade,pair[1].grade].sort().join('|');
+      if(type(a)!==type(b))mismatched++;
+      for(const pair of [a,b])for(const [p,q] of [[pair[0],pair[1]],[pair[1],pair[0]]]){
+        const c=counts.get(p.id);if(!c)continue;
+        c.games++;
+        c.combinations[q.grade]=(c.combinations[q.grade]||0)+1;
+        c.partners[q.id]=(c.partners[q.id]||0)+1;
+      }
+      for(const pair of [[...a,...b]])for(let i=0;i<pair.length;i++)for(let j=i+1;j<pair.length;j++){
+        const x=counts.get(pair[i].id),y=counts.get(pair[j].id);
+        if(x)x.opponents[pair[j].id]=(x.opponents[pair[j].id]||0)+1;
+        if(y)y.opponents[pair[i].id]=(y.opponents[pair[i].id]||0)+1;
+      }
+    }
+    let score=mismatched*100000;
+    const values=[...counts.values()];
+    const average=values.reduce((sum,c)=>sum+c.games,0)/Math.max(1,values.length);
+    for(const c of values)score+=Math.pow(c.games-average,2)*5000;
+    if(settings.balanceGrade!==false){
+      // Compare players of the SAME grade, ensuring AA/AB and BB/AB
+      // participation is distributed evenly among those players.
+      for(const grade of Object.keys(gradeTotals)){
+        const members=players.filter(p=>p.grade===grade);
+        const totalByPartnerGrade={};
+        for(const p of members)for(const [other,n] of Object.entries(counts.get(p.id).combinations))totalByPartnerGrade[other]=(totalByPartnerGrade[other]||0)+n;
+        for(const p of members)for(const other of Object.keys(totalByPartnerGrade)){
+          const ideal=totalByPartnerGrade[other]/members.length;
+          score+=Math.pow((counts.get(p.id).combinations[other]||0)-ideal,2)*900;
+        }
+      }
+    }
+    for(const c of values){
+      if(settings.minimizePartners!==false)for(const n of Object.values(c.partners))score+=n*(n-1)*18;
+      if(settings.minimizeOpponents!==false)for(const n of Object.values(c.opponents))score+=n*(n-1)*2;
+    }
+    return score;
+  }
+
   function generate(players, settings){
     if(settings.mode==='fixed')return createFixed(players,settings);
     if(settings.mode==='team')return createTeam(players,settings);
-    return createInternal(players,settings,settings.mode==='random');
+    if(settings.mode==='random')return createInternal(players,settings,true);
+    // Multi-start optimization: retain the best complete schedule, preserving
+    // per-round no-duplicate participation and partial fixed-pair constraints.
+    let best=null,bestScore=Infinity;
+    const attempts=players.length<=16?48:players.length<=28?20:8;
+    for(let i=0;i<attempts;i++){
+      const candidate=createInternal(players,settings,false);
+      const score=drawFairness(candidate,players,settings);
+      if(score<bestScore){best=candidate;bestScore=score;}
+      if(score===0)break;
+    }
+    return best||[];
   }
 
 return {generate,validPair};
