@@ -324,7 +324,7 @@ function renderReady(){
   $('generateBtn').textContent=state.schedule.length?'🔄 대진표 다시 만들기':'🏸 대진표 만들기';
 }
 
-$('generateBtn').addEventListener('click',()=>{
+$('generateBtn').addEventListener('click',async()=>{
   // Commit the visible partial-pair rows before reading/generating settings.
   if(typeof savePartialPairsFromUI==='function')savePartialPairsFromUI();
   readSettings();
@@ -333,7 +333,22 @@ $('generateBtn').addEventListener('click',()=>{
   state.schedule=TodayCockSchedule.generate(state.players,state.settings);
   state.currentRoundIndex=0;
   if(!state.schedule.length){toast('현재 설정으로 대진을 만들 수 없습니다. 복식 종류와 인원을 확인해주세요.');return}
-  saveState();renderAll();toast('대진표를 만들었습니다.');
+  // New draw must not inherit co-admin scores/round from the previous draw.
+  coAdminResetting=true;
+  clearTimeout(liveSyncTimer);
+  saveState();renderAll();
+  const activeRoom=localStorage.getItem(LIVE_ROOM_KEY);
+  if(activeRoom){
+    try{
+      await ensureShareIdentity();
+      await TodayCockFirebase.roomRef(activeRoom).update({...livePayload(true),coAdminEdits:null});
+    }catch(error){
+      console.error('새 대진 공동 운영자 기록 초기화 실패',error);
+      toast('대진은 생성됐지만 이전 공유 점수 초기화에 실패했습니다. 공유 연결을 확인해주세요.');
+    }
+  }
+  coAdminResetting=false;
+  toast('새 대진표를 만들었습니다.');
   $('currentRoundCard').scrollIntoView({behavior:'smooth'});
 });
 
@@ -497,6 +512,7 @@ function viewerUrl(code){
 let coAdminRoomRef=null;
 let coAdminRoomCode='';
 let coAdminApplying=false;
+let coAdminResetting=false;
 function coAdminUrl(code){return new URL('coadmin.html?room='+encodeURIComponent(code), new URL('./', location.href)).href;}
 function watchCoAdmins(code){
   if(coAdminRoomRef)coAdminRoomRef.off();
@@ -513,6 +529,7 @@ function watchCoAdmins(code){
       box.querySelectorAll('[data-approve]').forEach(b=>b.addEventListener('click',async()=>{const uid=b.dataset.approve;await coAdminRoomRef.child('coAdmins/'+uid).set({nickname:req[uid]?.nickname||'공동 운영자',enabled:true});await coAdminRoomRef.child('coAdminRequests/'+uid).remove();}));
       box.querySelectorAll('[data-revoke]').forEach(b=>b.addEventListener('click',()=>coAdminRoomRef.child('coAdmins/'+b.dataset.revoke).remove()));
     }
+    if(coAdminResetting)return;
     const edits=room.coAdminEdits||{};
     let changed=false;
     for(const [key,value] of Object.entries(edits.scores||{})){
