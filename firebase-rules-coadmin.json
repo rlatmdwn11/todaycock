@@ -22,19 +22,19 @@
         ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))",
         "coAdminRequests": {
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && root.child('rooms').child($roomId).child('active').val() === true && root.child('rooms').child($roomId).child('coAdmins').child($uid).child('enabled').val() !== true",
+            ".write": "auth != null && auth.uid === $uid && root.child('rooms').child($roomId).child('active').val() === true && root.child('rooms').child($roomId).child('coAdmins').child($uid).child('enabled').val() !== true && newData.exists()",
             ".validate": "newData.hasChildren(['nickname']) && newData.child('nickname').isString() && newData.child('nickname').val().length <= 20"
           }
         },
         "coAdminEdits": {
           "roundIndex": {
-            ".write": "auth != null && root.child('rooms').child($roomId).child('coAdmins').child(auth.uid).child('enabled').val() === true && root.child('rooms').child($roomId).child('active').val() === true",
+            ".write": "auth != null && root.child('rooms').child($roomId).child('coAdmins').child(auth.uid).child('enabled').val() === true && root.child('rooms').child($roomId).child('active').val() === true && newData.exists()",
             ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
           },
           "scores": {
             "$match": {
-              ".write": "auth != null && root.child('rooms').child($roomId).child('coAdmins').child(auth.uid).child('enabled').val() === true && root.child('rooms').child($roomId).child('active').val() === true",
-              ".validate": "newData.hasChildren(['score1','score2']) && newData.child('score1').isString() && newData.child('score2').isString() && newData.child('score1').val().length <= 3 && newData.child('score2').val().length <= 3"
+              ".write": "auth != null && root.child('rooms').child($roomId).child('coAdmins').child(auth.uid).child('enabled').val() === true && root.child('rooms').child($roomId).child('active').val() === true && newData.exists() && $match.matches(/^[0-9]+_[0-9]+$/)",
+              ".validate": "newData.hasChildren(['score1','score2']) && newData.child('score1').isString() && newData.child('score2').isString() && newData.child('score1').val().matches(/^([0-9]{1,3})?$/) && newData.child('score2').val().matches(/^([0-9]{1,3})?$/)"
             }
           }
         }
