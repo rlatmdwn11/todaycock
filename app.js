@@ -1388,3 +1388,88 @@ if(!Array.isArray(state.settings.partialPairs)) state.settings.partialPairs=[];
 if(typeof state.settings.showGrades!=='boolean') state.settings.showGrades=true;
 setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
 
+
+
+// ===== Optional cloud account: independent Firebase auth, existing anonymous room auth untouched =====
+(function(){
+  const el=id=>document.getElementById(id);
+  let cloudAuth=null,cloudDb=null,cloudUser=null,cloudReady=false,cloudTimer=null,cloudApplying=false,cloudBound=false;
+  const status=msg=>{if(el('cloudStatus'))el('cloudStatus').textContent=msg;};
+  const cloudRef=()=>cloudDb.ref('cloudWorkspaces/'+cloudUser.uid);
+  function initCloud(){
+    if(cloudReady)return;
+    const config=window.TODAYCOCK_FIREBASE_CONFIG;
+    if(!window.firebase||!config)throw new Error('Firebase 연결 설정이 없습니다.');
+    const app=firebase.apps.find(a=>a.name==='todaycock-cloud-account')||firebase.initializeApp(config,'todaycock-cloud-account');
+    cloudAuth=app.auth();cloudDb=app.database();cloudReady=true;
+    cloudAuth.onAuthStateChanged(user=>{
+      cloudUser=user&&user.email?user:null;
+      el('cloudLoginFields').hidden=!!cloudUser;
+      el('cloudConnectedFields').hidden=!cloudUser;
+      if(cloudUser){
+        status(cloudUser.email+' 연결됨 · 기존 데이터 보호를 위해 올리기 또는 불러오기를 선택하세요.');
+      }else{cloudBound=false;status('계정을 연결하면 PC와 휴대폰에서 대진을 이어서 작업할 수 있어요.');}
+    });
+  }
+  async function sign(mode){
+    try{
+      initCloud();
+      const email=el('cloudEmail').value.trim(),password=el('cloudPassword').value;
+      if(!email||password.length<6){status('이메일과 6자 이상 비밀번호를 입력해주세요.');return;}
+      status('계정 연결 중...');
+      if(mode==='up')await cloudAuth.createUserWithEmailAndPassword(email,password);
+      else await cloudAuth.signInWithEmailAndPassword(email,password);
+      el('cloudPassword').value='';
+    }catch(e){console.error('계정 연결 실패',e);status('계정 연결 실패: '+(e.code||e.message));}
+  }
+  async function upload(){
+    if(!cloudUser)return;
+    try{
+      if(!confirm('이 기기의 현재 선수 명단·대진표·점수를 클라우드에 저장할까요? 클라우드에 있던 대진은 교체됩니다.'))return;
+      cloudBound=true;status('클라우드 저장 중...');
+      await saveCloudNow();
+      status('☁️ 저장 완료 · '+cloudUser.email+' · 이 기기의 변경사항은 자동 저장됩니다.');
+    }catch(e){cloudBound=false;console.error(e);status('클라우드 저장 실패: '+(e.code||e.message));}
+  }
+  async function download(){
+    if(!cloudUser)return;
+    try{
+      status('클라우드 대진 확인 중...');
+      const snap=await cloudRef().once('value'),doc=snap.val();
+      if(!doc||!doc.state){status('클라우드에 저장된 대진이 없어요. 먼저 PC에서 대진을 올려주세요.');return;}
+      if(!confirm('클라우드 대진을 이 기기로 불러올까요? 현재 기기 대진은 교체되므로 필요하면 먼저 백업하세요.')){status('불러오기를 취소했습니다.');return;}
+      cloudApplying=true;clearTimeout(cloudTimer);clearTimeout(saveTimer);
+      const loaded=sanitizeLoadedState(doc.state);
+      if(!loaded)throw new Error('INVALID_CLOUD_STATE');
+      Object.assign(state,loaded);persistStateNow();renderAll();
+      cloudBound=true;
+      status('☁️ 불러오기 완료 · '+cloudUser.email+' · 이후 변경사항은 자동 저장됩니다.');
+    }catch(e){console.error(e);status('클라우드 불러오기 실패: '+(e.code||e.message));}
+    finally{cloudApplying=false;}
+  }
+  async function saveCloudNow(){
+    if(!cloudBound||!cloudUser||cloudApplying)return;
+    const payload=JSON.parse(JSON.stringify({
+      state:{players:state.players,schedule:state.schedule,currentRoundIndex:state.currentRoundIndex,filter:state.filter,fixedPairs:state.fixedPairs,settings:state.settings}
+    }));
+    payload.updatedAt=firebase.database.ServerValue.TIMESTAMP;
+    await cloudRef().set(payload);
+  }
+  function queueCloudSave(){
+    if(!cloudBound||!cloudUser||cloudApplying)return;
+    clearTimeout(cloudTimer);
+    cloudTimer=setTimeout(()=>saveCloudNow().catch(e=>{console.error('클라우드 자동 저장 실패',e);status('클라우드 자동 저장 실패 · 연결을 확인해주세요.');}),850);
+  }
+  el('cloudSignIn')?.addEventListener('click',()=>sign('in'));
+  el('cloudSignUp')?.addEventListener('click',()=>sign('up'));
+  el('cloudUpload')?.addEventListener('click',upload);
+  el('cloudDownload')?.addEventListener('click',download);
+  el('cloudSignOut')?.addEventListener('click',async()=>{
+    if(!confirm('클라우드 계정에서 로그아웃할까요? 기기에 저장된 대진은 유지됩니다.'))return;
+    clearTimeout(cloudTimer);cloudBound=false;
+    try{await cloudAuth.signOut();}catch(e){status('로그아웃 실패: '+e.message);}
+  });
+  const oldSave=saveState;
+  saveState=function(){oldSave();queueCloudSave();};
+  try{initCloud();}catch(e){console.error(e);status('클라우드 연결을 초기화하지 못했습니다.');}
+})();
