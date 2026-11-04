@@ -1411,22 +1411,32 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
       }else{cloudBound=false;status('계정을 연결하면 PC와 휴대폰에서 대진을 이어서 작업할 수 있어요.');}
     });
   }
-  function cloudErrorMessage(e){
-    const code=e&&e.code||'';
-    const messages={
-      'auth/email-already-in-use':'이미 가입된 이메일이에요. 아래 로그인 버튼을 눌러주세요.',
-      'auth/invalid-email':'이메일 주소 형식이 올바르지 않아요.',
+  function cloudErrorMessage(e,action='작업'){
+    const code=String(e?.code||'').toLowerCase();
+    const message=String(e?.message||'').toLowerCase();
+    const errors={
+      'auth/email-already-in-use':'이미 가입된 이메일이에요. 로그인 버튼을 눌러주세요.',
+      'auth/invalid-email':'이메일 주소 형식을 확인해 주세요.',
       'auth/weak-password':'비밀번호는 6자 이상 입력해 주세요.',
       'auth/wrong-password':'이메일 또는 비밀번호를 확인해 주세요.',
-      'auth/user-not-found':'가입된 계정을 찾지 못했어요. 계정 만들기를 눌러주세요.',
+      'auth/user-not-found':'가입된 계정이 없어요. 계정 만들기를 눌러주세요.',
       'auth/invalid-credential':'이메일 또는 비밀번호를 확인해 주세요.',
       'auth/invalid-login-credentials':'이메일 또는 비밀번호를 확인해 주세요.',
       'auth/too-many-requests':'로그인 시도가 너무 많아요. 잠시 후 다시 시도해 주세요.',
       'auth/network-request-failed':'인터넷 연결을 확인하고 다시 시도해 주세요.',
-      'auth/operation-not-allowed':'이메일 로그인 설정이 필요해요. 관리자에게 문의해 주세요.',
-      'auth/user-disabled':'사용할 수 없는 계정이에요. 관리자에게 문의해 주세요.'
+      'auth/operation-not-allowed':'이메일 로그인을 사용할 수 없어요. 관리자에게 문의해 주세요.',
+      'auth/user-disabled':'사용이 중지된 계정이에요. 관리자에게 문의해 주세요.',
+      'auth/requires-recent-login':'보안을 위해 다시 로그인해 주세요.',
+      'permission_denied':'클라우드 접근 권한이 없어요. Firebase 데이터베이스 규칙을 관리자에게 확인해 달라고 해주세요.',
+      'database/permission-denied':'클라우드 접근 권한이 없어요. Firebase 데이터베이스 규칙을 관리자에게 확인해 달라고 해주세요.',
+      'auth/unauthorized-domain':'현재 접속 주소에서 로그인을 사용할 수 없어요. 관리자에게 문의해 주세요.',
+      'disconnected':'인터넷 연결이 끊겼어요. 연결을 확인한 뒤 다시 시도해 주세요.'
     };
-    return messages[code]||'계정 연결에 실패했어요. 잠시 후 다시 시도해 주세요.';
+    if(errors[code])return errors[code];
+    if(message.includes('permission_denied')||message.includes('permission denied'))return errors.permission_denied;
+    if(message.includes('network')||message.includes('offline'))return errors.disconnected;
+    if(code==='invalid_cloud_state'||message.includes('invalid_cloud_state'))return '클라우드 데이터 형식이 올바르지 않아요. 관리자에게 문의해 주세요.';
+    return action+'에 실패했어요. 잠시 후 다시 시도해 주세요. 계속되면 관리자에게 문의해 주세요.';
   }
   async function sign(mode){
     try{
@@ -1437,7 +1447,7 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
       if(mode==='up')await cloudAuth.createUserWithEmailAndPassword(email,password);
       else await cloudAuth.signInWithEmailAndPassword(email,password);
       el('cloudPassword').value='';
-    }catch(e){console.error('계정 연결 실패',e);status(cloudErrorMessage(e));}
+    }catch(e){console.error('계정 연결 실패',e);status(cloudErrorMessage(e,'계정 연결'));}
   }
   async function upload(){
     if(!cloudUser)return;
@@ -1446,7 +1456,7 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
       cloudBound=true;status('클라우드 저장 중...');
       await saveCloudNow();
       status('☁️ 저장 완료 · '+cloudUser.email+' · 이 기기의 변경사항은 자동 저장됩니다.');
-    }catch(e){cloudBound=false;console.error(e);status('클라우드 저장 실패: '+(e.code||e.message));}
+    }catch(e){cloudBound=false;console.error(e);status(cloudErrorMessage(e,'클라우드 저장'));}
   }
   async function download(){
     if(!cloudUser)return;
@@ -1461,7 +1471,7 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
       Object.assign(state,loaded);persistStateNow();renderAll();
       cloudBound=true;
       status('☁️ 불러오기 완료 · '+cloudUser.email+' · 이후 변경사항은 자동 저장됩니다.');
-    }catch(e){console.error(e);status('클라우드 불러오기 실패: '+(e.code||e.message));}
+    }catch(e){console.error(e);status(cloudErrorMessage(e,'클라우드 불러오기'));}
     finally{cloudApplying=false;}
   }
   async function saveCloudNow(){
@@ -1475,7 +1485,7 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
   function queueCloudSave(){
     if(!cloudBound||!cloudUser||cloudApplying)return;
     clearTimeout(cloudTimer);
-    cloudTimer=setTimeout(()=>saveCloudNow().catch(e=>{console.error('클라우드 자동 저장 실패',e);status('클라우드 자동 저장 실패 · 연결을 확인해주세요.');}),850);
+    cloudTimer=setTimeout(()=>saveCloudNow().catch(e=>{console.error('클라우드 자동 저장 실패',e);status(cloudErrorMessage(e,'클라우드 자동 저장'));}),850);
   }
   el('cloudSignIn')?.addEventListener('click',()=>sign('in'));
   el('cloudSignUp')?.addEventListener('click',()=>sign('up'));
@@ -1484,7 +1494,7 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
   el('cloudSignOut')?.addEventListener('click',async()=>{
     if(!confirm('클라우드 계정에서 로그아웃할까요? 기기에 저장된 대진은 유지됩니다.'))return;
     clearTimeout(cloudTimer);cloudBound=false;
-    try{await cloudAuth.signOut();}catch(e){status('로그아웃 실패: '+e.message);}
+    try{await cloudAuth.signOut();}catch(e){status(cloudErrorMessage(e,'로그아웃'));}
   });
   const oldSave=saveState;
   saveState=function(){oldSave();queueCloudSave();};
