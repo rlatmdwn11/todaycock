@@ -373,7 +373,7 @@ function renderCurrentRound(){
   }));
 }
 $('prevRoundBtn').addEventListener('click',()=>{if(state.currentRoundIndex>0){state.currentRoundIndex--;saveState();renderCurrentRound();syncLiveRoom()}});
-$('nextRoundBtn').addEventListener('click',()=>{if(state.currentRoundIndex<state.schedule.length-1){state.currentRoundIndex++;saveState();renderCurrentRound()}});
+$('nextRoundBtn').addEventListener('click',()=>{if(state.currentRoundIndex<state.schedule.length-1){state.currentRoundIndex++;saveState();renderCurrentRound();syncLiveRoom()}});
 
 function renderSchedule(){
   if(!state.schedule.length){$('scheduleCard').classList.add('hidden');return}
@@ -618,7 +618,7 @@ async function startLiveShare(){
     let code=localStorage.getItem(LIVE_ROOM_KEY);
     if(!code)code=generateRoomCode();
 
-    await TodayCockFirebase.roomRef(code).set(livePayload(true));
+    await TodayCockFirebase.roomRef(code).update(livePayload(true));
 
     localStorage.setItem(LIVE_ROOM_KEY,code);
     $('liveRoomCode').textContent=code;
