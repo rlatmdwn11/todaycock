@@ -139,11 +139,41 @@ function renderMatch(match){
   </div>`;
 }
 
+function calculateLiveAwards(rounds){
+  const byId=new Map();
+  for(const round of rounds)for(const match of round.matches||[]){
+    for(const player of [...(match.team1||[]),...(match.team2||[])]){
+      const id=String(player.id??player.name);
+      if(!byId.has(id))byId.set(id,{id,name:player.name,games:0,wins:0,losses:0,draws:0});
+      byId.get(id).games++;
+    }
+  }
+  for(const round of rounds)for(const match of round.matches||[]){
+    if(match.score1===''||match.score2==='')continue;
+    const a=Number(match.score1),b=Number(match.score2);
+    for(const [side,players] of [[1,match.team1||[]],[2,match.team2||[]]]){
+      for(const player of players){
+        const stat=byId.get(String(player.id??player.name));
+        if(!stat)continue;
+        if(a===b)stat.draws++;
+        else if((a>b&&side===1)||(b>a&&side===2))stat.wins++;
+        else stat.losses++;
+      }
+    }
+  }
+  const players=[...byId.values()].map(p=>({...p,rate:p.games?Math.round(p.wins/p.games*100):0}));
+  return {
+    mvp:[...players].sort((a,b)=>b.wins-a.wins||b.rate-a.rate||b.games-a.games)[0]||null,
+    bestRate:[...players].filter(p=>p.games>0).sort((a,b)=>b.rate-a.rate||b.games-a.games)[0]||null,
+    mostGames:[...players].sort((a,b)=>b.games-a.games||b.wins-a.wins)[0]||null
+  };
+}
+
 function applyCoAdminEdits(data){
   const rounds=(data.schedule||[]).map(r=>({...r,matches:(r.matches||[]).map(m=>({...m}))}));
   const edits=data.coAdminEdits||{};
   for(const [key,score] of Object.entries(edits.scores||{})){
-    const matchKey=/^(\\d+)_(\\d+)$/.exec(key);
+    const matchKey=/^([0-9]+)_([0-9]+)$/.exec(key);
     if(!matchKey||!score)continue;
     const ri=Number(matchKey[1]),mi=Number(matchKey[2]);
     const match=rounds[ri]?.matches[mi];
@@ -166,7 +196,7 @@ function applyCoAdminEdits(data){
   return {...data,schedule:rounds,currentRound,
     progress:{completed,total:flat.length,percent:flat.length?Math.round(completed/flat.length*100):0},
     scoreboard:{team1Wins,team2Wins,draws},
-    finalStats:Object.keys(edits.scores||{}).length?null:data.finalStats};
+    finalStats:completed?calculateLiveAwards(rounds):null};
 }
 
 function renderRoom(data){
