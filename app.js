@@ -111,7 +111,8 @@ function loadState(){
 }
 
 $('openAdminBtn').addEventListener('click',()=>{$('adminCode').value='';$('nickname').value=localStorage.getItem(NICKNAME_KEY)||'';$('adminError').textContent='';showScreen('adminLoginScreen')});
-$('openViewerBtn').addEventListener('click',()=>{$('roomCode').value='';$('viewerError').textContent='';showScreen('viewerCodeScreen')});
+// 관람자는 공유 링크로 접속하므로 첫 화면 관람 버튼은 선택 사항입니다.
+if($('openViewerBtn'))$('openViewerBtn').addEventListener('click',()=>{$('roomCode').value='';$('viewerError').textContent='';showScreen('viewerCodeScreen')});
 document.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.back)));
 $('homeBtn').addEventListener('click',()=>showScreen('homeScreen'));
 
