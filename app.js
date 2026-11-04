@@ -1404,8 +1404,8 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
     cloudAuth=app.auth();cloudDb=app.database();cloudReady=true;
     cloudAuth.onAuthStateChanged(user=>{
       cloudUser=user&&user.email?user:null;
-      el('cloudLoginFields').hidden=!!cloudUser;
-      el('cloudConnectedFields').hidden=!cloudUser;
+      el('cloudLoginFields').style.display=cloudUser?'none':'grid';
+      el('cloudConnectedFields').style.display=cloudUser?'block':'none';
       if(cloudUser){
         status(cloudUser.email+' 연결됨 · 기존 데이터 보호를 위해 올리기 또는 불러오기를 선택하세요.');
       }else{cloudBound=false;status('계정을 연결하면 PC와 휴대폰에서 대진을 이어서 작업할 수 있어요.');}
