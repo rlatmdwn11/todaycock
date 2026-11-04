@@ -1411,6 +1411,23 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
       }else{cloudBound=false;status('계정을 연결하면 PC와 휴대폰에서 대진을 이어서 작업할 수 있어요.');}
     });
   }
+  function cloudErrorMessage(e){
+    const code=e&&e.code||'';
+    const messages={
+      'auth/email-already-in-use':'이미 가입된 이메일이에요. 아래 로그인 버튼을 눌러주세요.',
+      'auth/invalid-email':'이메일 주소 형식이 올바르지 않아요.',
+      'auth/weak-password':'비밀번호는 6자 이상 입력해 주세요.',
+      'auth/wrong-password':'이메일 또는 비밀번호를 확인해 주세요.',
+      'auth/user-not-found':'가입된 계정을 찾지 못했어요. 계정 만들기를 눌러주세요.',
+      'auth/invalid-credential':'이메일 또는 비밀번호를 확인해 주세요.',
+      'auth/invalid-login-credentials':'이메일 또는 비밀번호를 확인해 주세요.',
+      'auth/too-many-requests':'로그인 시도가 너무 많아요. 잠시 후 다시 시도해 주세요.',
+      'auth/network-request-failed':'인터넷 연결을 확인하고 다시 시도해 주세요.',
+      'auth/operation-not-allowed':'이메일 로그인 설정이 필요해요. 관리자에게 문의해 주세요.',
+      'auth/user-disabled':'사용할 수 없는 계정이에요. 관리자에게 문의해 주세요.'
+    };
+    return messages[code]||'계정 연결에 실패했어요. 잠시 후 다시 시도해 주세요.';
+  }
   async function sign(mode){
     try{
       initCloud();
@@ -1420,7 +1437,7 @@ setTimeout(()=>{updateRosterTeamUI();renderPartialPairs();},400);
       if(mode==='up')await cloudAuth.createUserWithEmailAndPassword(email,password);
       else await cloudAuth.signInWithEmailAndPassword(email,password);
       el('cloudPassword').value='';
-    }catch(e){console.error('계정 연결 실패',e);status('계정 연결 실패: '+(e.code||e.message));}
+    }catch(e){console.error('계정 연결 실패',e);status(cloudErrorMessage(e));}
   }
   async function upload(){
     if(!cloudUser)return;
