@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오늘콕 공동 운영자</title><link rel="stylesheet" href="style.css"><script src="firebase-config.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script></head>
+<body><main class="screen active"><div class="viewer-shell"><div class="topbar"><button class="icon-btn" onclick="location.href='index.html'">←</button><h2>👥 공동 운영자</h2><span></span></div><section class="card"><p id="status">연결 준비 중...</p><div id="join"><label for="nick">공동 운영자 이름</label><input id="nick" maxlength="20" placeholder="이름 또는 닉네임"><button class="btn primary" id="request" type="button">편집 권한 요청</button></div><div id="editor" class="hidden"><h3 id="eventName">경기</h3><div class="round-nav"><button class="btn secondary compact" id="prev">← 이전 라운드</button><strong id="roundLabel"></strong><button class="btn secondary compact" id="next">다음 라운드 →</button></div><p class="help">점수를 입력하면 자동 저장됩니다. 선수와 대진 구성은 변경할 수 없습니다.</p><div id="matches"></div></div></section></div></main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const code=new URLSearchParams(location.search).get('room');
+let ref=null,uid='',room=null,roundIndex=0,canEdit=false;
+if(!firebase.apps.length)firebase.initializeApp(window.TODAYCOCK_FIREBASE_CONFIG);
+const db=firebase.database();
+function status(s){$('status').textContent=s;}
+function render(){
+ if(!room||room.active!==true){status('경기방이 종료되었거나 존재하지 않습니다.');$('editor').classList.add('hidden');return;}
+ canEdit=room.coAdmins?.[uid]?.enabled===true;
+ $('join').classList.toggle('hidden',canEdit);
+ $('editor').classList.toggle('hidden',!canEdit);
+ if(!canEdit){status(room.coAdminRequests?.[uid]?'승인 요청 중입니다. 최초 운영자의 승인을 기다려주세요.':'공동 운영자 권한을 요청해주세요.');return;}
+ status('승인됨 · 점수와 라운드 변경 가능');
+ $('eventName').textContent=room.eventInfo?.name||'오늘콕 경기';
+ const rounds=room.schedule||[];
+ const edit=room.coAdminEdits||{};
+ roundIndex=Number.isInteger(edit.roundIndex)?edit.roundIndex:Math.max(0,rounds.findIndex(r=>r.round===room.currentRound));
+ roundIndex=Math.max(0,Math.min(rounds.length-1,roundIndex));
+ const current=rounds[roundIndex];
+ $('roundLabel').textContent=current?current.round+'라운드':'경기 없음';
+ $('prev').disabled=roundIndex===0;$('next').disabled=roundIndex>=rounds.length-1;
+ $('matches').innerHTML=(current?.matches||[]).map((m,mi)=>{
+ const score=edit.scores?.[roundIndex+'_'+mi]||m;
+ return '<div class="match-card"><strong>'+esc(m.court)+'코트</strong><p>'+esc((m.team1||[]).map(p=>p.name).join(' / '))+' VS '+esc((m.team2||[]).map(p=>p.name).join(' / '))+'</p><div class="score-inputs"><input type="number" inputmode="numeric" min="0" data-score="'+mi+'_1" value="'+esc(score.score1??'')+'" placeholder="조 A"><b>:</b><input type="number" inputmode="numeric" min="0" data-score="'+mi+'_2" value="'+esc(score.score2??'')+'" placeholder="조 B"></div></div>';
+ }).join('');
+ document.querySelectorAll('[data-score]').forEach(el=>el.addEventListener('change',async()=>{
+ if(!canEdit)return;
+ const [mi]=el.dataset.score.split('_').map(Number);
+ const inputs=[...document.querySelectorAll('[data-score]')].filter(x=>Number(x.dataset.score.split('_')[0])===mi);
+ const values=inputs.map(x=>x.value.trim());
+ if(values.some(v=>v!==''&&(!/^\\d+$/.test(v)||Number(v)>999))){status('점수는 0~999 사이의 숫자로 입력해주세요.');return;}
+ try{await ref.child('coAdminEdits/scores/'+roundIndex+'_'+mi).set({score1:values[0],score2:values[1]});status('점수 저장됨');}
+ catch(e){status('저장 실패: 권한 또는 연결을 확인해주세요.');}
+ }));
+}
+$('request').addEventListener('click',async()=>{
+ const nick=$('nick').value.trim();if(!nick){status('이름을 입력해주세요.');return;}
+ try{await ref.child('coAdminRequests/'+uid).set({nickname:nick});status('승인 요청을 보냈습니다.');}
+ catch(e){status('요청 실패: Firebase 규칙을 확인해주세요.');}
+});
+async function changeRound(delta){
+ if(!canEdit)return;
+ const rounds=room.schedule||[];const next=roundIndex+delta;
+ if(next<0||next>=rounds.length)return;
+ try{await ref.child('coAdminEdits/roundIndex').set(next);}catch(e){status('라운드 변경 실패');}
+}
+$('prev').onclick=()=>changeRound(-1);$('next').onclick=()=>changeRound(1);
+(async()=>{
+ if(!code||!/^[A-Za-z0-9-]{4,32}$/.test(code)){status('올바른 경기방 코드가 아닙니다.');return;}
+ try{const cred=await firebase.auth().signInAnonymously();uid=cred.user.uid;ref=db.ref('rooms/'+code);ref.on('value',s=>{room=s.val();render();},()=>status('경기방 읽기 실패: Firebase 규칙을 확인해주세요.'));}
+ catch(e){status('로그인 실패: Firebase 익명 로그인을 확인해주세요.');}
+})();
+</script></body></html>
