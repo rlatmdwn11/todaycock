@@ -139,6 +139,36 @@ function renderMatch(match){
   </div>`;
 }
 
+function applyCoAdminEdits(data){
+  const rounds=(data.schedule||[]).map(r=>({...r,matches:(r.matches||[]).map(m=>({...m}))}));
+  const edits=data.coAdminEdits||{};
+  for(const [key,score] of Object.entries(edits.scores||{})){
+    const matchKey=/^(\\d+)_(\\d+)$/.exec(key);
+    if(!matchKey||!score)continue;
+    const ri=Number(matchKey[1]),mi=Number(matchKey[2]);
+    const match=rounds[ri]?.matches[mi];
+    if(match){
+      match.score1=String(score.score1??'');
+      match.score2=String(score.score2??'');
+    }
+  }
+  const currentRound=Number.isInteger(edits.roundIndex)&&rounds[edits.roundIndex]
+    ? rounds[edits.roundIndex].round : data.currentRound;
+  const flat=rounds.flatMap(r=>r.matches);
+  const completed=flat.filter(m=>m.score1!==''&&m.score2!=='').length;
+  let team1Wins=0,team2Wins=0,draws=0;
+  for(const m of flat){
+    if(m.score1===''||m.score2==='')continue;
+    if(Number(m.score1)>Number(m.score2))team1Wins++;
+    else if(Number(m.score1)<Number(m.score2))team2Wins++;
+    else draws++;
+  }
+  return {...data,schedule:rounds,currentRound,
+    progress:{completed,total:flat.length,percent:flat.length?Math.round(completed/flat.length*100):0},
+    scoreboard:{team1Wins,team2Wins,draws},
+    finalStats:Object.keys(edits.scores||{}).length?null:data.finalStats};
+}
+
 function renderRoom(data){
   if(!data||data.active!==true){
     $('viewerStatus').textContent='공유가 종료되었거나 존재하지 않는 팀전입니다.';
@@ -230,7 +260,7 @@ function joinRoom(){
       $('viewerStatus').textContent='해당 팀전 코드를 찾을 수 없습니다.';
       return;
     }
-    renderRoom(snapshot.val());
+    renderRoom(applyCoAdminEdits(snapshot.val()));
   },error=>{
     console.error(error);
     $('viewerStatus').textContent='관람 권한이 없거나 공유가 종료되었습니다.';
