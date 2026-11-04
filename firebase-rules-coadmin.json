@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "config": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "history": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "rooms": {
+      "$roomId": {
+        ".read": "data.child('active').val() === true || (auth != null && data.child('ownerUid').val() === auth.uid)",
+        ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.exists() && data.child('ownerUid').val() === auth.uid && newData.child('ownerUid').val() === auth.uid))",
+        "coAdminRequests": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('rooms').child($roomId).child('active').val() === true && !root.child('rooms').child($roomId).child('coAdmins').child($uid).child('enabled').val()",
+            ".validate": "newData.hasChildren(['nickname']) && newData.child('nickname').isString() && newData.child('nickname').val().length <= 20"
+          }
+        },
+        "coAdminEdits": {
+          "roundIndex": {
+            ".write": "auth != null && root.child('rooms').child($roomId).child('coAdmins').child(auth.uid).child('enabled').val() === true && root.child('rooms').child($roomId).child('active').val() === true",
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() < root.child('rooms').child($roomId).child('schedule').numChildren()"
+          },
+          "scores": {
+            "$match": {
+              ".write": "auth != null && root.child('rooms').child($roomId).child('coAdmins').child(auth.uid).child('enabled').val() === true && root.child('rooms').child($roomId).child('active').val() === true",
+              ".validate": "newData.hasChildren(['score1','score2']) && newData.child('score1').isString() && newData.child('score2').isString() && newData.child('score1').val().length <= 3 && newData.child('score2').val().length <= 3"
+            }
+          }
+        }
+      }
+    }
+  }
+}
