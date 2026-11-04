@@ -512,3 +512,18 @@ input[type="date"]::-webkit-calendar-picker-indicator{
 /* 2.2.4 placement */
 #partialPairPanel{margin-top:16px;margin-bottom:16px}
 #addPartialPairBtn{position:relative;z-index:2;pointer-events:auto}
+
+/* Desktop readability: restore centered operator workspace without changing mobile */
+@media screen and (min-width: 900px) {
+  #adminMainScreen { padding: 28px 32px 64px; }
+  #adminMainScreen .app-header,
+  #adminMainScreen .save-status-bar,
+  #adminMainScreen .operator-toolbar,
+  #adminMainScreen .content-stack { width: 100%; max-width: 1080px; margin-left: auto; margin-right: auto; box-sizing: border-box; }
+  #adminMainScreen .content-stack { gap: 20px; }
+  #adminMainScreen .card { padding: 26px 30px; }
+  #adminMainScreen .operator-toolbar { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  #adminMainScreen .form-grid { column-gap: 20px; row-gap: 18px; }
+  #adminMainScreen .section-title { margin-bottom: 18px; }
+  #adminMainScreen .generation-options { margin-top: 20px; }
+}
