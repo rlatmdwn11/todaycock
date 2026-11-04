@@ -496,7 +496,7 @@ function viewerUrl(code){
 let coAdminRoomRef=null;
 let coAdminRoomCode='';
 let coAdminApplying=false;
-function coAdminUrl(code){return location.href.replace(/index\\.html.*$/,'').replace(/\\?.*$/,'')+'coadmin.html?room='+encodeURIComponent(code);}
+function coAdminUrl(code){return new URL('coadmin.html?room='+encodeURIComponent(code), new URL('./', location.href)).href;}
 function watchCoAdmins(code){
   if(coAdminRoomRef)coAdminRoomRef.off();
   coAdminRoomCode=code;
