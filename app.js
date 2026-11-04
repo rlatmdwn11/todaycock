@@ -369,10 +369,10 @@ function renderCurrentRound(){
   document.querySelectorAll('[data-score]').forEach(inp=>inp.addEventListener('input',()=>{
     const [ri,mi,side]=inp.dataset.score.split('|').map(Number);
     state.schedule[ri].matches[mi][side===1?'score1':'score2']=inp.value;
-    saveState();renderSchedule();renderOverview();renderStats();
+    saveState();renderSchedule();renderOverview();renderStats();renderFinalResult();syncLiveRoom();
   }));
 }
-$('prevRoundBtn').addEventListener('click',()=>{if(state.currentRoundIndex>0){state.currentRoundIndex--;saveState();renderCurrentRound()}});
+$('prevRoundBtn').addEventListener('click',()=>{if(state.currentRoundIndex>0){state.currentRoundIndex--;saveState();renderCurrentRound();syncLiveRoom()}});
 $('nextRoundBtn').addEventListener('click',()=>{if(state.currentRoundIndex<state.schedule.length-1){state.currentRoundIndex++;saveState();renderCurrentRound()}});
 
 function renderSchedule(){
@@ -492,6 +492,53 @@ function viewerUrl(code){
   return `${base}viewer.html?room=${encodeURIComponent(code)}`;
 }
 
+
+let coAdminRoomRef=null;
+let coAdminRoomCode='';
+let coAdminApplying=false;
+function coAdminUrl(code){return location.href.replace(/index\\.html.*$/,'').replace(/\\?.*$/,'')+'coadmin.html?room='+encodeURIComponent(code);}
+function watchCoAdmins(code){
+  if(coAdminRoomRef)coAdminRoomRef.off();
+  coAdminRoomCode=code;
+  coAdminRoomRef=TodayCockFirebase.roomRef(code);
+  const url=$('coAdminUrl');if(url)url.value=coAdminUrl(code);
+  coAdminRoomRef.on('value',snap=>{
+    const room=snap.val();if(!room||!room.active)return;
+    const req=room.coAdminRequests||{},approved=room.coAdmins||{};
+    const box=$('coAdminRequests');
+    if(box){
+      box.innerHTML=Object.entries(req).filter(([uid])=>!approved[uid]).map(([uid,item])=>'<div class="option-row"><span>'+esc(item.nickname||'공동 운영자 요청')+'</span> <button type="button" class="btn secondary compact" data-approve="'+esc(uid)+'">승인</button></div>').join('')+
+        Object.entries(approved).map(([uid,item])=>'<div class="option-row"><span>'+esc(item.nickname||'공동 운영자')+'</span> <button type="button" class="btn danger compact" data-revoke="'+esc(uid)+'">권한 해제</button></div>').join('');
+      box.querySelectorAll('[data-approve]').forEach(b=>b.addEventListener('click',async()=>{const uid=b.dataset.approve;await coAdminRoomRef.child('coAdmins/'+uid).set({nickname:req[uid]?.nickname||'공동 운영자',enabled:true});await coAdminRoomRef.child('coAdminRequests/'+uid).remove();}));
+      box.querySelectorAll('[data-revoke]').forEach(b=>b.addEventListener('click',()=>coAdminRoomRef.child('coAdmins/'+b.dataset.revoke).remove()));
+    }
+    const edits=room.coAdminEdits||{};
+    let changed=false;
+    for(const [key,value] of Object.entries(edits.scores||{})){
+      const parts=key.split('_').map(Number);
+      if(parts.length!==2)continue;
+      const match=state.schedule[parts[0]]?.matches[parts[1]];
+      if(!match||!value)continue;
+      const one=value.score1??'',two=value.score2??'';
+      if(String(match.score1)!==String(one)||String(match.score2)!==String(two)){
+        match.score1=one;match.score2=two;changed=true;
+      }
+    }
+    if(Number.isInteger(edits.roundIndex)&&state.schedule[edits.roundIndex]&&state.currentRoundIndex!==edits.roundIndex){state.currentRoundIndex=edits.roundIndex;changed=true;}
+    if(changed){
+      coAdminApplying=true;
+      saveState();renderCurrentRound();renderSchedule();renderOverview();renderStats();renderFinalResult();
+      coAdminApplying=false;
+      syncLiveRoom();
+    }
+  },error=>console.error('공동 운영자 동기화 실패',error));
+}
+$('copyCoAdminBtn')?.addEventListener('click',async()=>{
+  const url=$('coAdminUrl').value;
+  if(!url){toast('먼저 실시간 공유를 시작해주세요.');return;}
+  try{await navigator.clipboard.writeText(url);toast('공동 운영자 링크 복사 완료');}
+  catch(e){prompt('공동 운영자 링크',url);}
+});
 function currentRoundNumber(){
   if(!state.schedule.length)return 1;
   const incomplete=state.schedule.find(r=>r.matches.some(m=>m.score1===''||m.score2===''));
@@ -527,7 +574,7 @@ function livePayload(active=true){
     },
     mode:state.settings.mode,
     matchType:state.settings.matchType,
-    currentRound:currentRoundNumber(),
+    currentRound:state.schedule[state.currentRoundIndex]?.round||currentRoundNumber(),
     progress:{
       completed,
       total:flat.length,
@@ -577,6 +624,7 @@ async function startLiveShare(){
     $('liveRoomCode').textContent=code;
     $('liveViewerUrl').value=viewerUrl(code);
     setLiveStatus('공유 중','active');
+    watchCoAdmins(code);
     toast('실시간 공유를 시작했습니다.');
   }catch(error){
     if(error.message!=='NICKNAME_REQUIRED'){
@@ -618,6 +666,7 @@ async function stopLiveShare(){
       active:false,
       updatedAt:TodayCockFirebase.serverTimestamp()
     });
+    if(coAdminRoomRef){coAdminRoomRef.off();coAdminRoomRef=null;}
     localStorage.removeItem(LIVE_ROOM_KEY);
     $('liveRoomCode').textContent='-';
     $('liveViewerUrl').value='';
@@ -634,6 +683,7 @@ async function stopLiveShare(){
 function restoreLiveRoomUi(){
   const code=localStorage.getItem(LIVE_ROOM_KEY);
   if(code){
+    watchCoAdmins(code);
     $('liveRoomCode').textContent=code;
     $('liveViewerUrl').value=viewerUrl(code);
     setLiveStatus('공유 중','active');
