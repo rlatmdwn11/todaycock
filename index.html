@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="오늘콕">
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=4">
   <title>오늘콕 TODAYCOCK 2.0</title>
-  <link rel="manifest" href="manifest.json?v=20260801-fix4">
+  <link rel="manifest" href="manifest.json?v=20261104-auto">
   <link rel="stylesheet" href="style.css?v=20261104-desktopfix">
 </head>
 <body>
@@ -528,8 +528,8 @@
   
 <script>
 (function(){
-if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}
-if('caches' in window){caches.keys().then(function(ks){ks.forEach(function(k){if(k.indexOf('todaycock')!==-1)caches.delete(k);});}).catch(function(){});}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(function(reg){reg.update().catch(function(){});document.addEventListener('visibilitychange',function(){if(!document.hidden)reg.update().catch(function(){});});}).catch(function(){});}
+
 function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});var t=document.getElementById(id);if(t)t.classList.add('active');window.scrollTo(0,0);}
 var a=document.getElementById('openAdminBtn');if(a)a.addEventListener('click',function(){var c=document.getElementById('adminCode');var n=document.getElementById('nickname');var e=document.getElementById('adminError');if(c)c.value='';if(n)n.value=localStorage.getItem('todaycock2_nickname')||'';if(e)e.textContent='';show('adminLoginScreen');});
 var v=document.getElementById('openViewerBtn');if(v)v.addEventListener('click',function(){var r=document.getElementById('roomCode');var e=document.getElementById('viewerError');if(r)r.value='';if(e)e.textContent='';show('viewerCodeScreen');});
