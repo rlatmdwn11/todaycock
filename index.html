@@ -320,6 +320,7 @@
             <button class="btn danger" id="stopLiveBtn">공유 종료</button>
           </div>
           <p class="help">점수, 현재 라운드, 대진 수정 내용이 관람 화면에 실시간 반영됩니다.</p>
+          <div class="sub-panel"><h4>👥 공동 운영자</h4><p class="help">공동 운영자 링크를 공유하고, 들어온 사람의 권한 요청을 승인하세요. 점수와 라운드만 수정할 수 있습니다.</p><input id="coAdminUrl" readonly style="width:100%" placeholder="공유 시작 후 공동 운영자 링크 표시"><button type="button" class="btn secondary compact" id="copyCoAdminBtn">공동 운영자 링크 복사</button><div id="coAdminRequests"></div></div>
 
         </section>
 
@@ -521,7 +522,7 @@
 
   <script src="firebase.js?v=20260801-fix3"></script>
   <script src="schedule.js?v=20261006-2212"></script>
-  <script src="app.js?v=20261006-2212"></script>
+  <script src="app.js?v=20261104-coadmin"></script>
   
 <script>
 (function(){
